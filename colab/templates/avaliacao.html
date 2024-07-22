@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliação</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white">
+        <a class="navbar-brand" href="#">Sistema de Avaliação</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}">Sair</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h2>Avaliação</h2>
+        <form method="post">
+            {% csrf_token %}
+        
+            <div class="form-group">
+                {{ form.colaborador_avaliado.label_tag }}
+                <select class="form-control" name="colaborador_avaliado" id="id_colaborador_avaliado">
+                    {% for colaborador in form.colaborador_avaliado.field.queryset %}
+                        <option value="{{ colaborador.id }}">{{ colaborador.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                {{ form.avaliador.label_tag }}
+                <select class="form-control" name="avaliador" id="id_avaliador">
+                    {% for avaliador in form.avaliador.field.queryset %}
+                        <option value="{{ avaliador.id }}">{{ avaliador.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                {{ form.data_avaliacao.label_tag }}
+                <input type="date" class="form-control" name="data_avaliacao" id="id_data_avaliacao" value="{{ form.data_avaliacao.value|default:'' }}">
+            </div>
+            {% for field in form %}
+                {% if field.name|slice:":9" == "pergunta_" %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        <input type="number" class="form-control" name="{{ field.name }}" id="id_{{ field.name }}" value="{{ field.value|default:'' }}" min="1" max="10" step="0.1" placeholder="Digite uma nota de 1 a 10">
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <div class="form-group">
+                {{ form.pontos_melhoria.label_tag }}
+                <textarea class="form-control" name="pontos_melhoria" id="id_pontos_melhoria">{{ form.pontos_melhoria.value|default:'' }}</textarea>
+            </div>
+            <div class="form-group">
+                {{ form.pdi.label_tag }}
+                <textarea class="form-control" name="pdi" id="id_pdi">{{ form.pdi.value|default:'' }}</textarea>
+            </div>
+            <div class="form-group">
+                {{ form.metas.label_tag }}
+                <textarea class="form-control" name="metas" id="id_metas">{{ form.metas.value|default:'' }}</textarea>
+            </div>
+            <div class="form-group">
+                {{ form.alinhamento.label_tag }}
+                <textarea class="form-control" name="alinhamento" id="id_alinhamento">{{ form.alinhamento.value|default:'' }}</textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
+        </form>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

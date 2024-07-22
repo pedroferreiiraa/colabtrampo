@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliações</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Avaliações dos Colaboradores</h1>
+        <table class="table table-bordered mt-4">
+            <thead class="thead-light">
+                <tr>
+                    <th>Colaborador Avaliado</th>
+                    <th>Avaliador</th>
+                    <th>Data da Avaliação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for avaliacao in avaliacoes %}
+                    <tr>
+                        <td>{{ avaliacao.colaborador_avaliado }}</td>
+                        <td>{{ avaliacao.avaliador }}</td>
+                        <td>{{ avaliacao.data_avaliacao }}</td>
+                        <td>
+                            <a href="{% url 'avaliacao_detalhes' avaliacao.id %}" class="btn btn-info">Ver Detalhes</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">Nenhuma avaliação encontrada.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'avaliacao' %}" class="btn btn-primary">Adicionar Avaliação</a>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
