@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 
+from django.db.models import Q
+
 from django.contrib import messages
 
 from .forms import ColaboradorForm, AvaliacaoForm, Pergunta
@@ -36,20 +38,21 @@ def home_view(request):
     colaborador = request.user  # O usuário logado
     return render(request, 'home.html', {'colaborador': colaborador})
 
-
 @login_required
 def avaliacao_view(request):
     if request.method == 'POST':
         form = AvaliacaoForm(request.POST)
         if form.is_valid():
-            form.save()  # Salva a avaliação no banco de dados
-            return redirect('home')  # Redirecionar após salvar
-        else:
-            print(form.errors)  # Imprime os erros para depuração
+            avaliacao = form.save(commit=False)
+            avaliacao.usuario = request.user
+            avaliacao.save()
+            form.save_m2m()  # Salva as relações many-to-many
+            return redirect('home')
     else:
         form = AvaliacaoForm()
-    
+
     return render(request, 'avaliacao.html', {'form': form})
+
 
 @login_required
 def avaliacao(request):
@@ -60,30 +63,54 @@ def avaliacao(request):
         'avaliadores': Colaborador.objects.all(),  # Supondo que você tenha uma lista de avaliadores
     })
 
+def realizar_avaliacao(request):
+    if request.method == 'POST':
+        form = AvaliacaoForm(request.POST)
+        if form.is_valid():
+            # Cria a avaliação e salva no banco de dados
+            avaliacao = form.save(commit=False)
+            avaliacao.avaliador = request.user  # Define o avaliador como o usuário atual
+            avaliacao.save()
+            
+            # Salva as respostas relacionadas
+            for pergunta in Pergunta.objects.all():
+                resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
+                if resposta is not None:
+                    Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=resposta)
+            
+            return redirect('sucesso')  # Redireciona para uma página de sucesso
+    else:
+        form = AvaliacaoForm()
+
+    return render(request, 'avaliacao.html', {'form': form})
+
 def salvar_avaliacao(request):
     if request.method == 'POST':
         # Crie uma nova instância de Avaliacao
         avaliacao = Avaliacao(
             colaborador_avaliado_id=request.POST.get('colaborador_avaliado'),
             avaliador_id=request.POST.get('avaliador'),
-            data_avaliacao=request.POST.get('data_avaliacao'),
             pontos_melhoria=request.POST.get('pontos_melhoria'),
             pdi=request.POST.get('pdi'),
             metas=request.POST.get('metas'),
             alinhamento_semestral=request.POST.get('alinhamento_semestral'),
+            # Se você tiver um campo de data de avaliação, descomente a linha abaixo
+            # data_avaliacao=request.POST.get('data_avaliacao'),
         )
         avaliacao.save()  # Salva a avaliação no banco de dados
 
         # Salvar as respostas
-        for pergunta_id in request.POST.getlist('pergunta'):  # Supondo que você tenha um campo que lista as perguntas
-            nota = request.POST.get(f'nota_{pergunta_id}')  # O nome do campo para a nota deve ser algo como 'nota_1', 'nota_2', etc.
+        perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
+        for pergunta in perguntas:
+            nota = request.POST.get(f'pergunta_{pergunta.id}')  # O nome do campo para a nota deve ser algo como 'pergunta_1', 'pergunta_2', etc.
             if nota:
-                Resposta.objects.create(avaliacao=avaliacao, pergunta_id=pergunta_id, nota=nota)
+                Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=nota)
 
-        return redirect('')  # Redirecione para uma página de sucesso
+        return redirect('sucesso')  # Redirecione para uma página de sucesso
 
     # Se não for um POST, renderize o formulário novamente
     return render(request, 'salvar_avaliacao.html')  # Renderize o formulário novamente em caso de erro
+    
 
 def avaliacao_detalhes(request, avaliacao_id):
     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
@@ -129,28 +156,16 @@ def avaliacao_detalhes(request, avaliacao_id):
         'numeros_perguntas': numeros_perguntas,
     })
 
-# def avaliacao_detalhes(request, id):
-#     avaliacao = get_object_or_404(Avaliacao, id)
-
-#     # Crie um dicionário para armazenar perguntas e respostas
-#     perguntas_respostas = {}
-#     for i in range(1, 28):  # Supondo que você tenha 27 perguntas
-#         pergunta = getattr(avaliacao, f'pergunta_{i}', None)
-#         resposta = getattr(avaliacao, f'resposta_{i}', None)
-#         if pergunta and resposta:
-#             perguntas_respostas[pergunta] = resposta
-
-#     return render(request, 'avaliacao_detalhes.html', {
-#         'avaliacao': avaliacao,
-#         'perguntas_respostas': perguntas_respostas,
-#     })
-
 
 def avaliacoes_list(request):
+    # Busca todas as avaliações do banco de dados
     avaliacoes = Avaliacao.objects.all()
-    print(avaliacoes)
     return render(request, 'avaliacoes_list.html', {'avaliacoes': avaliacoes})
+
 
 def logout_view(request):
     logout(request)
     return redirect('login')  # Redirecione para a página de login ou home
+
+def sucesso_view(request):
+    return render(request, 'sucesso.html')  # Crie um template chamado sucesso.html

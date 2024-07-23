@@ -1,59 +1,20 @@
-{% load custom_filters %}
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes da Avaliação</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container my-5">
-        <h1>Detalhes da Avaliação</h1>
-        
-        <div class="mb-4">
-            <strong>Avaliação:</strong> {{ avaliacao.id }}<br>
-            <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado }}<br>
-            <strong>Avaliador:</strong> {{ avaliacao.avaliador }}<br>
-            <strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao|date:"d/m/Y" }}<br>
-        </div>
+    <h1>Detalhes da Avaliação</h1>
 
-        <h3>Notas</h3>
-        <div class="list-group mb-4">
-            {% load custom_filters %}  <!-- Carregando o filtro personalizado -->
-            {% for i in numeros_perguntas %}
-                <div class="list-group-item">
-                    <strong>Pergunta {{ i }}:</strong><br>
-                    <span>Nota: {{ respostas|get_item:i }}</span>  <!-- Acessando o dicionário de respostas -->
-                </div>
-            {% endfor %}
-        </div>
-
-        <h3>Pontos de Melhoria</h3>
-        <div class="mb-4">
-            <textarea class="form-control" rows="3" readonly>{{ avaliacao.pontos_melhoria }}</textarea>
-        </div>
-
-        <h3>PDI - Plano de Desenvolvimento Individual</h3>
-        <div class="mb-4">
-            <textarea class="form-control" rows="3" readonly>{{ avaliacao.pdi }}</textarea>
-        </div>
-
-        <h3>Metas</h3>
-        <div class="mb-4">
-            <textarea class="form-control" rows="3" readonly>{{ avaliacao.metas }}</textarea>
-        </div>
-
-        <h3>Alinhamento Semestral (Considerações)</h3>
-        <div class="mb-4">
-            <textarea class="form-control" rows="3" readonly>{{ avaliacao.alinhamento_semestral }}</textarea>
-        </div>
-
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <p>Teste {{avaliacao.respostas}}</p>
+    <p>Avaliador: {{ avaliacao.avaliador }}</p>
+    <p>Colaborador Avaliado: {{ avaliacao.colaborador_avaliado.nome }}</p>
+    <p>Pontos de Melhoria: {{ avaliacao.pontos_melhoria }}</p>
+    <p>PDI: {{ avaliacao.pdi }}</p>
+    <p>Metas: {{ avaliacao.metas }}</p>
+    <p>Alinhamento Semestral: {{ avaliacao.alinhamento_semestral }}</p>
+    <p>Média Geral: {{ avaliacao.media_geral }}</p>
+    <p>Comentários: {{ avaliacao.comentarios }}</p>
 </body>
 </html>

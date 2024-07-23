@@ -28,7 +28,9 @@
         <ul class="list-group">
             {% for avaliacao in avaliacoes %}
                 <li class="list-group-item">
-                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">{{ avaliacao.colaborador_avaliado.username }} - {{ avaliacao.data_avaliacao }}</a>
+                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
+                        {{ avaliacao.colaborador_avaliado.nome }} - {{ avaliacao.data_criacao|date:"d/m/Y H:i" }}
+                    </a>
                 </li>
             {% empty %}
                 <li class="list-group-item">Nenhuma avaliação encontrada.</li>

@@ -11,7 +11,7 @@
         <a class="navbar-brand" href="#">Sistema de Avaliação</a>
         <nav>
             {% csrf_token %}
-            <a href="{% url 'avaliacao' %}">Ir para Avaliação</a>
+            <a href="{% url 'realizar_avaliacao' %}">Ir para Avaliação</a>
         </nav>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
@@ -22,9 +22,10 @@
         </div>
     </nav>
     <div class="container mt-5">
-        <h2>Bem-vindo, {{ colaborador.username }}!</h2>
+        <h2>Bem-vindo, {{ colaborador.nome }}!</h2>
         <div class="card p-4">
-            <p><strong>Departamento:</strong> {{ colaborador.departamento }}</p>
+            <p><strong>Nome:</strong> {{ colaborador.nome }}</p>
+            <p><strong>Departamento:</strong> {{ colaborador.departamento.nome }}</p>
             <p><strong>Cargo:</strong> {{ colaborador.cargo }}</p>
             <p><strong>Tipo de Usuário:</strong> 
                 {% if colaborador.is_lider %}

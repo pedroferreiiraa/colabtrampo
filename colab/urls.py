@@ -3,7 +3,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 
 from . import views
-from .views import avaliacoes_list, avaliacao_detalhes, avaliacao_view, logout_view, salvar_avaliacao
+from .views import avaliacoes_list, avaliacao_detalhes, avaliacao_view, logout_view, salvar_avaliacao, realizar_avaliacao, sucesso_view
 
 urlpatterns = [
     path('', views.login_view, name='login'),
@@ -14,5 +14,6 @@ urlpatterns = [
     path('avaliacao/', avaliacao_view, name='avaliacao'),
     path('logout/', logout_view, name='logout'),
     path('salvar_avaliacao/', salvar_avaliacao, name='salvar_avaliacao'),
-
+    path('realizar_avaliacao/', realizar_avaliacao, name='realizar_avaliacao'),
+    path('sucesso/', sucesso_view, name='sucesso'),  # Defina a URL para a página de sucesso
 ]

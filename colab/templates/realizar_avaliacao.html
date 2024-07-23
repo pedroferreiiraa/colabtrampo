@@ -1,0 +1,22 @@
+<form method="POST" action="{% url 'salvar_avaliacao' %}">
+    {% csrf_token %}
+    <label for="colaborador_avaliado">Colaborador Avaliado:</label>
+    <select name="colaborador_avaliado" required>
+        <!-- Opções de colaboradores -->
+    </select>
+
+    <label for="avaliador">Avaliador:</label>
+    <select name="avaliador" required>
+        <!-- Opções de avaliadores -->
+    </select>
+
+    {% for pergunta in perguntas %}
+        <div>
+            <label>{{ pergunta.texto }}</label>
+            <input type="hidden" name="pergunta" value="{{ pergunta.id }}">
+            <input type="number" name="nota_{{ pergunta.id }}" required>
+        </div>
+    {% endfor %}
+
+    <button type="submit">Salvar Avaliação</button>
+</form>
