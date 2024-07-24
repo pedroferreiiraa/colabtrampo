@@ -1,0 +1,20 @@
+<!-- avaliacao_lider_form.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Avaliação pelo Líder</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
+    </form>
+
+    <h2>Avaliações do Colaborador</h2>
+    <ul>
+        {% for avaliacao in avaliacoes_colaboradores %}
+            <li>Avaliação {{ avaliacao.id }} - Realizada em {{ avaliacao.data_criacao }}</li>
+        {% empty %}
+            <li>Não há avaliações disponíveis para o colaborador.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

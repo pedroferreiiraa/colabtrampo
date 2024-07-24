@@ -1,0 +1,25 @@
+<!-- templates/avaliacao_lider.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>Avaliar Avaliação</h2>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Avaliação</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

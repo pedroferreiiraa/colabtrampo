@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Todas as Avaliações</h2>
+
+    {% if avaliacoes %}
+        <ul class="list-group">
+            {% for avaliacao in avaliacoes %}
+                <li class="list-group-item">
+                    <a href="{% url 'detalhes_avaliacao' avaliacao.id %}">
+                        <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
+                        <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
+                        <strong>Data:</strong> {{ avaliacao.data_avaliacao }}<br>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">Não há avaliações disponíveis.</p>
+    {% endif %}
+</div>
+{% endblock %}

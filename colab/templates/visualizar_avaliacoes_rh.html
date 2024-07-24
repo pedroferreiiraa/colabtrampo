@@ -1,0 +1,25 @@
+<!-- visualizar_avaliacoes_rh.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Visualização de Avaliações</h1>
+
+{% for departamento, turnos in avaliacoes_por_departamento.items %}
+    <h2>Departamento: {{ departamento }}</h2>
+
+    {% for turno, avaliacoes in turnos.items %}
+        <h3>Turno: {{ turno }}</h3>
+
+        <ul>
+            {% for avaliacao in avaliacoes %}
+                <li>
+                    <a href="{% url 'detalhes_avaliacao_rh' avaliacao.id %}">
+                        Avaliação de {{ avaliacao.colaborador_avaliado }} - {{ avaliacao.data_avaliacao }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% endfor %}
+
+{% endblock %}

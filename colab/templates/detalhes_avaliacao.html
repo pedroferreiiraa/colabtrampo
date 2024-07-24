@@ -1,0 +1,31 @@
+<!-- detalhes_avaliacao.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Detalhes da Avaliação</h1>
+
+<h2>Avaliação de {{ avaliacao.colaborador_avaliado }}</h2>
+<p>Data da Avaliação: {{ avaliacao.data_avaliacao }}</p>
+
+<h3>Respostas do Colaborador</h3>
+<ul>
+    {% for resposta in respostas_colaborador %}
+        <li>{{ resposta.pergunta }}: {{ resposta.nota }}</li>
+    {% empty %}
+        <li>Nenhuma resposta encontrada para o colaborador.</li>
+    {% endfor %}
+</ul>
+
+<h3>Respostas do Líder</h3>
+<ul>
+    {% for resposta in respostas_lider %}
+        <li>{{ resposta.pergunta }}: {{ resposta.nota }}</li>
+    {% empty %}
+        <li>Nenhuma resposta encontrada para o líder.</li>
+    {% endfor %}
+</ul>
+
+<p>Média das respostas do colaborador: {{ media_colaborador }}</p>
+<p>Média das respostas do líder: {{ media_lider }}</p>
+
+{% endblock %}

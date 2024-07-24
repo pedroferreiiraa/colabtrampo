@@ -2,14 +2,15 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Avaliação de Desempenho</title>
+    <title>Avaliação</title>
+    <!-- Inclua aqui os arquivos CSS e JS do Bootstrap, se necessário -->
 </head>
 <body>
-    <h1>Avaliação de Desempenho</h1>
-    <form method="post">
+    <h1>Avaliação</h1>
+    <form method="post" action="{% url 'avaliacao' %}">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Enviar Avaliação</button>
+        {{ form.as_p }} <!-- Renderiza o formulário como parágrafo -->
+        <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
     </form>
 </body>
 </html>

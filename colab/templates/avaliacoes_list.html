@@ -1,44 +1,19 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Avaliações</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white">
-        <a class="navbar-brand" href="#">Sistema de Avaliação</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'home' %}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <form method="post" action="{% url 'logout' %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-link nav-link">Sair</button>
-                    </form>
-                </li>
-            </ul>
-        </div>
-    </nav>
-    <div class="container mt-5">
-        <h1>Lista de Avaliações</h1>
-        <ul class="list-group">
-            {% for avaliacao in avaliacoes %}
-                <li class="list-group-item">
-                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
-                        {{ avaliacao.colaborador_avaliado.nome }} - {{ avaliacao.data_criacao|date:"d/m/Y H:i" }}
-                    </a>
-                </li>
-            {% empty %}
-                <li class="list-group-item">Nenhuma avaliação encontrada.</li>
-            {% endfor %}
-        </ul>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Lista de Avaliações</h2>
+  {% if avaliacoes %}
+    <ul>
+      {% for avaliacao in avaliacoes %}
+        <li>
+          Colaborador Avaliado: {{ avaliacao.colaborador_avaliado.nome }}<br>
+          Avaliador: {{ avaliacao.avaliador.nome }}<br>
+          Data: {{ avaliacao.data_criacao }}<br>
+          <!-- Adicione outros detalhes que desejar -->
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Não há avaliações disponíveis.</p>
+  {% endif %}
+{% endblock %}

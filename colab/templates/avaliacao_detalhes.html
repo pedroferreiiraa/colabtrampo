@@ -1,20 +1,33 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Detalhes da Avaliação</title>
-</head>
-<body>
-    <h1>Detalhes da Avaliação</h1>
+{% extends "base.html" %}
 
-    <p>Teste {{avaliacao.respostas}}</p>
-    <p>Avaliador: {{ avaliacao.avaliador }}</p>
-    <p>Colaborador Avaliado: {{ avaliacao.colaborador_avaliado.nome }}</p>
-    <p>Pontos de Melhoria: {{ avaliacao.pontos_melhoria }}</p>
-    <p>PDI: {{ avaliacao.pdi }}</p>
-    <p>Metas: {{ avaliacao.metas }}</p>
-    <p>Alinhamento Semestral: {{ avaliacao.alinhamento_semestral }}</p>
-    <p>Média Geral: {{ avaliacao.media_geral }}</p>
-    <p>Comentários: {{ avaliacao.comentarios }}</p>
-</body>
-</html>
+{% block content %}
+    <div class="container mt-5">
+        <h1>Detalhes da Avaliação</h1>
+        <p><strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}</p>
+        <p><strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}</p>
+        <p><strong>Data:</strong> {{ avaliacao.data_criacao }}</p>
+
+        {% for topico, dados in respostas_por_topico.items %}
+            <h2>{{ topico }}</h2>
+            <ul>
+                {% for pergunta, nota in dados.pares %}
+                    <li>
+                        <strong>{{ pergunta.texto }}</strong><br>
+                        Resposta: {{ nota }}
+                    </li>
+                {% endfor %}
+            </ul>
+            <p><strong>Média do tópico:</strong> {{ dados.media }}</p>
+        {% endfor %}
+
+        <h2>Respostas Textuais</h2>
+        <ul>
+            {% for resposta in respostas_textuais %}
+                <li>
+                    <strong>{{ resposta.pergunta.texto }}</strong><br>
+                    Resposta: {{ resposta.texto }}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

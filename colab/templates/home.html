@@ -1,45 +1,103 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white">
-        <a class="navbar-brand" href="#">Sistema de Avaliação</a>
-        <nav>
-            {% csrf_token %}
-            <a href="{% url 'realizar_avaliacao' %}">Ir para Avaliação</a>
-        </nav>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'logout' %}">Sair</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-    <div class="container mt-5">
-        <h2>Bem-vindo, {{ colaborador.nome }}!</h2>
-        <div class="card p-4">
-            <p><strong>Nome:</strong> {{ colaborador.nome }}</p>
-            <p><strong>Departamento:</strong> {{ colaborador.departamento.nome }}</p>
-            <p><strong>Cargo:</strong> {{ colaborador.cargo }}</p>
-            <p><strong>Tipo de Usuário:</strong> 
-                {% if colaborador.is_lider %}
-                    Líder
-                {% elif colaborador.is_coordenador %}
-                    Coordenador
-                {% else %}
-                    Colaborador
-                {% endif %}
-            </p>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">Bem-vindo, {{ user.nome }}!</h2>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Informações básicas</h3>
+                </div>
+                <div class="card-body">
+                  <p>Cargo atual: {{ user.cargo }}</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Realize sua avaliação clicando no link abaixo</h3>
+                </div>
+                <div class="card-body">
+                    <a class="nav-link btn-primary text-center text-light" href="{% url 'avaliacao' %}">Realizar avaliação</a>
+                </div>
+            </div>
+
+            {% if user.is_lider %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Avaliações do Seu Setor</h3>
+                </div>
+                <div class="card-body">
+                    {% if avaliacoes_setor %}
+                        <ul class="list-group">
+                            {% for avaliacao in avaliacoes_setor %}
+                                <li class="list-group-item">
+                                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
+                                        <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
+                                        <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
+                                        <strong>Data:</strong> {{ avaliacao.data_criacao }}<br>
+                                    </a>
+                                    <form method="post" action="{% url 'avaliacao_lider' avaliacao.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-secondary btn-sm">Avaliar</button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Não há avaliações no seu setor.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Avaliações Realizadas por Você</h3>
+                </div>
+                <div class="card-body">
+                    {% if avaliacoes_realizadas %}
+                        <ul class="list-group">
+                            {% for avaliacao in avaliacoes_realizadas %}
+                                <li class="list-group-item">
+                                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
+                                        <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
+                                        <strong>Data:</strong> {{ avaliacao.data_criacao }}<br>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Você ainda não realizou nenhuma avaliação.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Avaliações Recebidas por Você</h3>
+                </div>
+                <div class="card-body">
+                    {% if avaliacoes_recebidas %}
+                        <ul class="list-group">
+                            {% for avaliacao in avaliacoes_recebidas %}
+                                <li class="list-group-item">
+                                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
+                                        <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
+                                        <strong>Data:</strong> {{ avaliacao.data_criacao }}<br>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Você ainda não recebeu nenhuma avaliação.</p>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}
