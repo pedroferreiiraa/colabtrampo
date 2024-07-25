@@ -63,7 +63,7 @@ def avaliacao_view(request):
     perguntas = Pergunta.objects.all()
     
     if request.method == 'POST':
-        form = AvaliacaoForm(request.POST)
+        form = AvaliacaoForm(request.POST, user=request.user)
         
         if form.is_valid():
             # Cria a avaliação sem salvar ainda
@@ -75,11 +75,16 @@ def avaliacao_view(request):
             for pergunta in perguntas:
                 resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
                 if resposta is not None:
-                    Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=resposta)
+                    Resposta.objects.create(
+                        avaliacao=avaliacao,
+                        pergunta=pergunta,
+                        nota=resposta,
+                        usuario=request.user  # Define o usuário que está respondendo
+                    )
             
             return redirect('sucesso')  # Redireciona para uma página de sucesso
     else:
-        form = AvaliacaoForm()
+        form = AvaliacaoForm(user=request.user)
     
     return render(request, 'avaliacao.html', {
         'form': form,
@@ -88,27 +93,31 @@ def avaliacao_view(request):
         'avaliadores': Colaborador.objects.filter(is_lider=True),
     })
 
-
 def realizar_avaliacao(request):
     if request.method == 'POST':
-        form = AvaliacaoForm(request.POST)
+        form = AvaliacaoForm(request.POST, user=request.user)
         if form.is_valid():
             # Cria a avaliação e salva no banco de dados
             avaliacao = form.save(commit=False)
-            avaliacao.avaliador = request.user  # Define o avaliador como o usuário atual
             avaliacao.save()
             
             # Salva as respostas relacionadas
             for pergunta in Pergunta.objects.all():
                 resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
                 if resposta is not None:
-                    Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=resposta)
+                    Resposta.objects.create(
+                        avaliacao=avaliacao,
+                        pergunta=pergunta,
+                        nota=resposta,
+                        usuario=request.user  # Adiciona o usuário que está respondendo
+                    )
             
             return redirect('sucesso')  # Redireciona para uma página de sucesso
     else:
         form = AvaliacaoForm(user=request.user)
 
     return render(request, 'avaliacao.html', {'form': form})
+
 
 def salvar_avaliacao(request):
     if request.method == 'POST':
@@ -197,7 +206,7 @@ def calcular_media(respostas):
 #         'respostas_textuais': respostas_textuais,
 #     })
 
-def avaliacoes_list(request):
+def todas_avaliacoes(request):
     # Verificar se o usuário é um líder
     if not request.user.is_lider:
         raise PermissionDenied("Você não tem permissão para acessar esta página.")
@@ -242,7 +251,7 @@ def avaliacao_lider(request, avaliacao_id):
     
     return render(request, 'avaliacao_lider.html', {'form': form, 'avaliacao': avaliacao})
 
-def visualizar_avaliacoes_rh(request):
+def todas_avaliacoes_rh(request):
     # Obtém todas as avaliações
     avaliacoes = Avaliacao.objects.all()
 
@@ -266,28 +275,40 @@ def visualizar_avaliacoes_rh(request):
 
 
 def detalhes_avaliacao_rh(request, avaliacao_id):
-    # Obtém a avaliação específica
     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
     
-    # Obtém as respostas do colaborador e do líder
-    respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, user=avaliacao.colaborador_avaliado)
-    respostas_lider = Resposta.objects.filter(avaliacao=avaliacao, user=avaliacao.avaliador)
+    # Filtra as respostas do colaborador e do líder usando IDs
+    respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.colaborador_avaliado_id)
+    respostas_lider = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.avaliador_id)
+
+    # Agrupa as respostas por departamento e turno
+    respostas_por_departamento_turno = {}
     
-    # Calcula médias, se necessário
+    departamento = avaliacao.area  # Supondo que 'area' representa o departamento
+    turno = avaliacao.periodo_referencia  # Supondo que 'periodo_referencia' representa o turno
+    
+    if departamento not in respostas_por_departamento_turno:
+        respostas_por_departamento_turno[departamento] = {}
+    
+    if turno not in respostas_por_departamento_turno[departamento]:
+        respostas_por_departamento_turno[departamento][turno] = {'colaborador': [], 'lider': []}
+    
+    respostas_por_departamento_turno[departamento][turno]['colaborador'].extend(respostas_colaborador)
+    respostas_por_departamento_turno[departamento][turno]['lider'].extend(respostas_lider)
+    
+     #Calcula médias
     media_colaborador = calcular_media(respostas_colaborador)
     media_lider = calcular_media(respostas_lider)
     
     return render(request, 'detalhes_avaliacao.html', {
         'avaliacao': avaliacao,
-        'respostas_colaborador': respostas_colaborador,
-        'respostas_lider': respostas_lider,
+        'respostas_por_departamento_turno': respostas_por_departamento_turno,
         'media_colaborador': media_colaborador,
         'media_lider': media_lider,
     })
 
 def calcular_media(respostas):
-    # Exemplo de função para calcular a média das respostas
     if not respostas:
         return None
-    total = sum([resposta.valor for resposta in respostas])  # Supondo que a resposta tenha um campo valor
+    total = sum([resposta.nota for resposta in respostas])
     return total / len(respostas)

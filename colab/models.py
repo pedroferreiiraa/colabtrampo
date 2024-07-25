@@ -2,14 +2,15 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from datetime import date
 
+
 class Colaborador(AbstractUser):
     nome = models.CharField(max_length=200, blank=True)
     departamento = models.ForeignKey('Departamento', on_delete=models.CASCADE, null=True, blank=True)
-    cargo = models.CharField(max_length=100)
+    funcao = models.CharField(max_length=200, blank=True)
     is_lider = models.BooleanField(default=False)
     is_coordenador = models.BooleanField(default=False)
     turno = models.ForeignKey('Turno', on_delete=models.CASCADE, null=True, blank=True)
-    data_admissao = models.DateField(null=True, blank=True)
+    data_admissao = models.DateTimeField(blank=True, null=True)
 
     groups = models.ManyToManyField(
         Group,
@@ -81,11 +82,11 @@ class Pergunta(models.Model):
         return self.texto  
         
 class Avaliacao(models.Model):
+    avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_realizadas')
     colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas', default='')
     nome_completo = models.CharField(max_length=100, default='')
     data_admissao = models.DateField(default=date.today)
     cargo_atual = models.CharField(max_length=100, default='')
-    avaliador = models.CharField(max_length=100)
     area = models.CharField(max_length=100, default='')
     periodo_referencia = models.CharField(max_length=100, default='')
     data_avaliacao = models.DateField(default=date.today)
@@ -112,6 +113,7 @@ class Avaliacao(models.Model):
 
     
 class Resposta(models.Model):
+    usuario = models.ForeignKey(Colaborador, on_delete=models.CASCADE)  # Adiciona o campo usuário
     avaliacao = models.ForeignKey(Avaliacao, on_delete=models.CASCADE, related_name='respostas')
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
     nota = models.IntegerField()

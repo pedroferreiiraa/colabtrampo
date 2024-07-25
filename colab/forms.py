@@ -5,32 +5,25 @@ from .models import Avaliacao, Pergunta, Resposta, AvaliacaoLider, RespostaLider
 
 class ColaboradorForm(UserCreationForm):
     departamento = forms.ModelChoiceField(queryset=Departamento.objects.all())
-    cargo = forms.CharField(max_length=100)
 
     class Meta:
         model = Colaborador
-        fields = ('nome', 'username', 'password1', 'password2', 'departamento', 'cargo', 'is_lider', 'is_coordenador', 'turno')
+        fields = ('nome', 'username', 'password1', 'password2', 'departamento', 'turno', 'data_admissao', 'funcao', 'is_lider', 'is_coordenador')
 
 class AvaliacaoForm(forms.ModelForm):
     class Meta:
         model = Avaliacao
         fields = [
             'colaborador_avaliado',
-            'nome_completo', 'data_admissao', 'cargo_atual', 'avaliador', 
-            'area', 'periodo_referencia', 'data_avaliacao',
+            'nome_completo', 'avaliador', 'data_avaliacao',
             'competencias', 'compromissos', 'integracao', 'caracteristicas', 'pontos_melhoria', 
             'pdi', 'metas', 'alinhamento_semestral', 'comentarios'
         ]
         labels = {
             'colaborador_avaliado': 'Colaborador avaliado',
             'nome_completo': 'Nome Completo',
-            'data_admissao': 'Data / Admissão',
-            'cargo_atual': 'Cargo Atual',
             'avaliador': 'Avaliador',
-            'area': 'Área',
             'periodo_referencia': 'Período de Referência',
-            'data_inicial': 'Data Inicial',
-            'data_final': 'Data Final',
             'data_avaliacao': 'Data Avaliação',
             'competencias': 'Competências/Habilidades',
             'compromissos': 'Compromisso com Resultados',
@@ -60,11 +53,11 @@ class AvaliacaoForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None) 
+        self.user = kwargs.pop('user', None) 
         super(AvaliacaoForm, self).__init__(*args, **kwargs)
         
-        if user:
-            self.fields['nome_completo'].initial = user.get_full_name()
+        if self.user:
+            self.fields['nome_completo'].initial = self.user.get_full_name()
 
         for field_name in self.fields:
             self.fields[field_name].widget.attrs.update({
@@ -100,9 +93,15 @@ class AvaliacaoForm(forms.ModelForm):
             for pergunta in Pergunta.objects.all():
                 resposta = self.cleaned_data.get(f'pergunta_{pergunta.id}')
                 if resposta is not None:
-                    Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=resposta)
+                    Resposta.objects.create(
+                        avaliacao=avaliacao,
+                        pergunta=pergunta,
+                        nota=resposta,
+                        usuario=self.user  # Define o usuário
+                    )
                     
         return avaliacao
+
 
 class AvaliacaoLiderForm(forms.ModelForm):
     class Meta:

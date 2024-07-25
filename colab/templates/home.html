@@ -11,7 +11,11 @@
                     <h3>Informações básicas</h3>
                 </div>
                 <div class="card-body">
-                  <p>Cargo atual: {{ user.cargo }}</p>
+                  <p>Função atual: {{ user.funcao }}</p>
+                  <p>Departamento: {{ user.departamento }}</p>
+                  <p>Data de admissão: {{ user.data_admissao|date:"d/m/Y" }}</p>
+
+
                 </div>
             </div>
 
@@ -34,12 +38,12 @@
                         <ul class="list-group">
                             {% for avaliacao in avaliacoes_setor %}
                                 <li class="list-group-item">
-                                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
+                                    <a href="">
                                         <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
                                         <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
                                         <strong>Data:</strong> {{ avaliacao.data_criacao }}<br>
                                     </a>
-                                    <form method="post" action="{% url 'avaliacao_lider' avaliacao.id %}" style="display:inline;">
+                                    <form method="post" action="" style="display:inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-secondary btn-sm">Avaliar</button>
                                     </form>
@@ -53,49 +57,7 @@
             </div>
             {% endif %}
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3>Avaliações Realizadas por Você</h3>
-                </div>
-                <div class="card-body">
-                    {% if avaliacoes_realizadas %}
-                        <ul class="list-group">
-                            {% for avaliacao in avaliacoes_realizadas %}
-                                <li class="list-group-item">
-                                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
-                                        <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
-                                        <strong>Data:</strong> {{ avaliacao.data_criacao }}<br>
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">Você ainda não realizou nenhuma avaliação.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3>Avaliações Recebidas por Você</h3>
-                </div>
-                <div class="card-body">
-                    {% if avaliacoes_recebidas %}
-                        <ul class="list-group">
-                            {% for avaliacao in avaliacoes_recebidas %}
-                                <li class="list-group-item">
-                                    <a href="{% url 'avaliacao_detalhes' avaliacao.id %}">
-                                        <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
-                                        <strong>Data:</strong> {{ avaliacao.data_criacao }}<br>
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">Você ainda não recebeu nenhuma avaliação.</p>
-                    {% endif %}
-                </div>
-            </div>
+            
 
         </div>
     </div>

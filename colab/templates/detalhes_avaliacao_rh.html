@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Detalhes da Avaliação</h1>
+  <p><strong>Avaliação:</strong> {{ avaliacao }}</p>
+
+  {% for departamento, turnos in respostas_por_departamento_turno.items %}
+    <h2>Departamento: {{ departamento }}</h2>
+    {% for turno, respostas in turnos.items %}
+      <h3>Turno: {{ turno }}</h3>
+      <h4>Respostas do Colaborador</h4>
+      {% for resposta in respostas.colaborador %}
+        <p>Pergunta: {{ resposta.pergunta.texto }}</p>
+        <p>Nota: {{ resposta.nota }}</p>
+        <p>Comentário: {{ resposta.texto }}</p>
+      {% endfor %}
+
+      <h4>Respostas do Líder</h4>
+      {% for resposta in respostas.lider %}
+        <p>Pergunta: {{ resposta.pergunta.texto }}</p>
+        <p>Nota: {{ resposta.nota }}</p>
+        <p>Comentário: {{ resposta.texto }}</p>
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+
+  <h4>Média do Colaborador: {{ media_colaborador }}</h4>
+  <h4>Média do Líder: {{ media_lider }}</h4>
+{% endblock %}
