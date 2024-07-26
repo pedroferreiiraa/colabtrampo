@@ -8,22 +8,19 @@ class ColaboradorForm(UserCreationForm):
 
     class Meta:
         model = Colaborador
-        fields = ('nome', 'username', 'password1', 'password2', 'departamento', 'turno', 'data_admissao', 'funcao', 'is_lider', 'is_coordenador')
+        fields = ('nome', 'username', 'password1', 'password2', 'departamento', 'turno', 'data_admissao', 'funcao', 'is_lider', 'is_coordenador', 'is_rh')
 
 class AvaliacaoForm(forms.ModelForm):
     class Meta:
         model = Avaliacao
         fields = [
-            'colaborador_avaliado',
-            'nome_completo', 'avaliador', 'data_avaliacao',
+            'colaborador_avaliado','avaliador', 'data_avaliacao',
             'competencias', 'compromissos', 'integracao', 'caracteristicas', 'pontos_melhoria', 
             'pdi', 'metas', 'alinhamento_semestral', 'comentarios'
         ]
         labels = {
             'colaborador_avaliado': 'Colaborador avaliado',
-            'nome_completo': 'Nome Completo',
             'avaliador': 'Avaliador',
-            'periodo_referencia': 'Período de Referência',
             'data_avaliacao': 'Data Avaliação',
             'competencias': 'Competências/Habilidades',
             'compromissos': 'Compromisso com Resultados',
@@ -36,10 +33,6 @@ class AvaliacaoForm(forms.ModelForm):
             'comentarios': 'Comentários Adicionais'
         }
         widgets = {
-            'data_admissao': forms.DateInput(attrs={'type': 'date'}),
-            'data_cargo': forms.DateInput(attrs={'type': 'date'}),
-            'data_inicial': forms.DateInput(attrs={'type': 'date'}),
-            'data_final': forms.DateInput(attrs={'type': 'date'}),
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
             'competencias': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
             'compromissos': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
@@ -53,11 +46,16 @@ class AvaliacaoForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None) 
+        self.user = kwargs.pop('user', None)
         super(AvaliacaoForm, self).__init__(*args, **kwargs)
-        
+
         if self.user:
-            self.fields['nome_completo'].initial = self.user.get_full_name()
+            # Define o campo 'colaborador_avaliado' com o usuário atual
+            self.fields['colaborador_avaliado'].initial = self.user
+            # Define o campo 'nome_completo' com o nome do usuário atual
+            #self.fields['nome_completo'].initial = self.user.get_full_name()
+            # Filtra o campo 'avaliador' para exibir apenas os líderes
+            self.fields['avaliador'].queryset = Colaborador.objects.filter(is_lider=True)
 
         for field_name in self.fields:
             self.fields[field_name].widget.attrs.update({

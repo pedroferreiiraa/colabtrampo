@@ -1,16 +1,48 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Avaliação</title>
-    <!-- Inclua aqui os arquivos CSS e JS do Bootstrap, se necessário -->
+{% extends "base.html" %}
+
+{% block content%}
+    <style>
+        body {
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-header {
+            margin-bottom: 20px;
+        }
+        .form-actions {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Avaliação</h1>
-    <form method="post" action="{% url 'avaliacao' %}">
-        {% csrf_token %}
-        {{ form.as_p }} <!-- Renderiza o formulário como parágrafo -->
-        <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
-    </form>
+    <div class="container">
+        <header class="text-center mb-4">
+            <h1>Avaliação</h1>
+        </header>
+        
+        <form method="post" action="{% url 'realizar_avaliacao' %}">
+            {% csrf_token %}
+            
+            <div class="form-header">
+                <p class="lead">Realize a avaliação, {{ user.nome }}</p>
+            </div>
+
+            <!-- Renderiza o formulário com estilo -->
+            <div class="mb-3">
+                {{ form.as_p }}
+            </div>
+
+            <div class="form-actions text-center">
+                <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Inclua o JS do Bootstrap e dependências -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
 </body>
-</html>
+{% endblock content %}

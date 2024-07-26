@@ -45,33 +45,35 @@ def home_view(request):
 
     # Se o usuário for líder, obter avaliações do seu setor e turno
     avaliacoes_setor = None
+    colaboradores_setor = None
     if user.is_lider:
         avaliacoes_setor = Avaliacao.objects.filter(
             colaborador_avaliado__departamento=user.departamento,
             colaborador_avaliado__turno=user.turno
         ).distinct()
+        # Filtra os colaboradores do mesmo setor que não são líderes
+        colaboradores_setor = Colaborador.objects.filter(departamento=user.departamento, is_lider=False)
 
     return render(request, 'home.html', {
         'avaliacoes_realizadas': avaliacoes_realizadas,
         'avaliacoes_recebidas': avaliacoes_recebidas,
         'avaliacoes_setor': avaliacoes_setor,
+        'colaboradores_setor': colaboradores_setor,
         'is_lider': user.is_lider
     })
 
 @login_required
-def avaliacao_view(request):
+def realizar_avaliacao(request):
     perguntas = Pergunta.objects.all()
-    
+
     if request.method == 'POST':
         form = AvaliacaoForm(request.POST, user=request.user)
         
         if form.is_valid():
-            # Cria a avaliação sem salvar ainda
             avaliacao = form.save(commit=False)
-            avaliacao.avaliador = request.user  # Define o avaliador como o usuário atual
-            avaliacao.save()  # Salva a avaliação
+            avaliacao.avaliador = form.cleaned_data['avaliador']
+            avaliacao.save()
             
-            # Salva as respostas relacionadas
             for pergunta in perguntas:
                 resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
                 if resposta is not None:
@@ -79,10 +81,10 @@ def avaliacao_view(request):
                         avaliacao=avaliacao,
                         pergunta=pergunta,
                         nota=resposta,
-                        usuario=request.user  # Define o usuário que está respondendo
+                        usuario=request.user
                     )
             
-            return redirect('sucesso')  # Redireciona para uma página de sucesso
+            return redirect('sucesso')
     else:
         form = AvaliacaoForm(user=request.user)
     
@@ -93,30 +95,45 @@ def avaliacao_view(request):
         'avaliadores': Colaborador.objects.filter(is_lider=True),
     })
 
-def realizar_avaliacao(request):
+
+@login_required
+def realizar_avaliacao_colaborador(request, colaborador_id):
+    colaborador = get_object_or_404(Colaborador, id=colaborador_id)
+    perguntas = Pergunta.objects.all()
+    
     if request.method == 'POST':
         form = AvaliacaoForm(request.POST, user=request.user)
+        
         if form.is_valid():
-            # Cria a avaliação e salva no banco de dados
             avaliacao = form.save(commit=False)
+            avaliacao.colaborador_avaliado = colaborador
+            avaliacao.avaliador = form.cleaned_data['avaliador']
             avaliacao.save()
             
-            # Salva as respostas relacionadas
-            for pergunta in Pergunta.objects.all():
+            for pergunta in perguntas:
                 resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
                 if resposta is not None:
                     Resposta.objects.create(
                         avaliacao=avaliacao,
                         pergunta=pergunta,
                         nota=resposta,
-                        usuario=request.user  # Adiciona o usuário que está respondendo
+                        usuario=request.user
                     )
             
-            return redirect('sucesso')  # Redireciona para uma página de sucesso
+            return redirect('sucesso')
     else:
-        form = AvaliacaoForm(user=request.user)
+        initial_data = {
+            'colaborador_avaliado': colaborador
+        }
+        form = AvaliacaoForm(user=request.user, initial=initial_data)
+    
+    return render(request, 'avaliacao.html', {
+        'form': form,
+        'perguntas': perguntas,
+        'colaboradores': Colaborador.objects.all(),
+        'avaliadores': Colaborador.objects.filter(is_lider=True),
+    })
 
-    return render(request, 'avaliacao.html', {'form': form})
 
 
 def salvar_avaliacao(request):
@@ -251,6 +268,7 @@ def avaliacao_lider(request, avaliacao_id):
     
     return render(request, 'avaliacao_lider.html', {'form': form, 'avaliacao': avaliacao})
 
+@login_required
 def todas_avaliacoes_rh(request):
     # Obtém todas as avaliações
     avaliacoes = Avaliacao.objects.all()
@@ -258,8 +276,8 @@ def todas_avaliacoes_rh(request):
     # Agrupa as avaliações por departamento e turno
     avaliacoes_por_departamento = {}
     for avaliacao in avaliacoes:
-        departamento = avaliacao.area  # Supondo que 'area' representa o departamento
-        turno = avaliacao.periodo_referencia  # Supondo que 'periodo_referencia' representa o turno
+        departamento = avaliacao.colaborador_avaliado.departamento  # Supondo que 'departamento' representa o departamento
+        turno = avaliacao.colaborador_avaliado.turno  # Supondo que 'turno' representa o turno
         
         if departamento not in avaliacoes_por_departamento:
             avaliacoes_por_departamento[departamento] = {}
@@ -272,7 +290,6 @@ def todas_avaliacoes_rh(request):
     return render(request, 'visualizar_avaliacoes_rh.html', {
         'avaliacoes_por_departamento': avaliacoes_por_departamento,
     })
-
 
 def detalhes_avaliacao_rh(request, avaliacao_id):
     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)

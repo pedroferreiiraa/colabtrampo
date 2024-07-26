@@ -3,7 +3,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 
 from . import views
-from .views import todas_avaliacoes, avaliacao_detalhes, avaliacao_view, logout_view, salvar_avaliacao,realizar_avaliacao, sucesso_view, avaliacao_lider,  todas_avaliacoes_rh, detalhes_avaliacao_rh
+from .views import todas_avaliacoes, avaliacao_detalhes, logout_view, salvar_avaliacao,realizar_avaliacao, sucesso_view, avaliacao_lider,  todas_avaliacoes_rh, detalhes_avaliacao_rh, realizar_avaliacao_colaborador
 urlpatterns = [
     path('', views.login_view, name='login'),
     path('cadastro/', views.cadastro_view, name='cadastro'),
@@ -12,22 +12,17 @@ urlpatterns = [
     #path('avaliacoes/', views.todas_avaliacoes, name='todas_avaliacoes'), # Isso aqui só ficará visível pro RH
 
 
-    path('avaliacoes_rh/', views.todas_avaliacoes_rh, name='todas_avaliacoes_rh'),
+    path('avaliacoes_rh/', views.todas_avaliacoes_rh, name='visualizar_avaliacoes_rh'),
     path('avaliacoes_rh/<int:avaliacao_id>/', views.detalhes_avaliacao_rh, name='detalhes_avaliacao_rh'),
 
+    path('realizar_avaliacao/', realizar_avaliacao, name='realizar_avaliacao'),
+    path('realizar_avaliacao_colaborador/<int:colaborador_id>/', realizar_avaliacao_colaborador, name='realizar_avaliacao_colaborador'),
 
 
-    path('avaliacao/<int:avaliacao_id>/', views.avaliacao_detalhes, name='avaliacao_detalhes'),
-
-
-    path('avaliacao/', views.avaliacao_view, name='avaliacao'),
     path('logout/', views.logout_view, name='logout'),
     path('salvar_avaliacao/', views.salvar_avaliacao, name='salvar_avaliacao'),
-    path('realizar_avaliacao/', views.realizar_avaliacao, name='realizar_avaliacao'),
+
     path('sucesso/', views.sucesso_view, name='sucesso'),
    # path('avaliar/<int:avaliacao_id>/', avaliacao_lider, name='avaliacao_lider'),
 
-
-    # path('visualizar-avaliacoes-rh/', visualizar_avaliacoes_rh, name='visualizar_avaliacoes_rh'),
-    # path('detalhes_avaliacao_rh/', detalhes_avaliacao_rh, name='detalhes_avaliacoes_rh'),
 ]

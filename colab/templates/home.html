@@ -19,15 +19,17 @@
                 </div>
             </div>
 
+            {% if not user.is_rh %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h3>Realize sua avaliação clicando no link abaixo</h3>
                 </div>
                 <div class="card-body">
-                    <a class="nav-link btn-primary text-center text-light" href="{% url 'avaliacao' %}">Realizar avaliação</a>
+                    <a class="nav-link btn-primary text-center text-light" href="{% url 'realizar_avaliacao' %}">Realizar avaliação</a>
                 </div>
             </div>
-
+        {% endif %}
+        
             {% if user.is_lider %}
             <div class="card mb-4">
                 <div class="card-header">
@@ -38,15 +40,9 @@
                         <ul class="list-group">
                             {% for avaliacao in avaliacoes_setor %}
                                 <li class="list-group-item">
-                                    <a href="">
-                                        <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
-                                        <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
-                                        <strong>Data:</strong> {{ avaliacao.data_criacao }}<br>
-                                    </a>
-                                    <form method="post" action="" style="display:inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-secondary btn-sm">Avaliar</button>
-                                    </form>
+                                    <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
+                                    <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
+                                    <strong>Data:</strong> {{ avaliacao.data_criacao }}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -55,9 +51,31 @@
                     {% endif %}
                 </div>
             </div>
-            {% endif %}
 
-            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Colaboradores do Seu Setor</h3>
+                </div>
+                <div class="card-body">
+                    {% if colaboradores_setor %}
+                        <ul class="list-group">
+                            {% for colaborador in colaboradores_setor %}
+                                <li class="list-group-item">
+                                    <strong>Colaborador:</strong> {{ colaborador.nome }}<br>
+                                    <strong>Setor:</strong> {{ colaborador.departamento.nome }}<br>
+                                    <form method="get" action="{% url 'realizar_avaliacao_colaborador' colaborador.id %}">
+                                        <input type="hidden" name="colaborador_id" value="{{ colaborador.id }}">
+                                        <button type="submit" class="btn btn-secondary btn-sm">Avaliar</button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Não há colaboradores no seu setor.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
 
         </div>
     </div>

@@ -2,24 +2,42 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Visualização de Avaliações</h1>
+<div class="container mt-5">
+    <h1 class="mb-4">Visualização de Avaliações Realizadas</h1>
 
-{% for departamento, turnos in avaliacoes_por_departamento.items %}
-    <h2>Departamento: {{ departamento }}</h2>
+    <div class="accordion" id="departamentosAccordion">
+        {% for departamento, turnos in avaliacoes_por_departamento.items %}
+            <div class="card">
+                <div class="card-header" id="heading-{{ forloop.counter }}">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
+                            Departamento: {{ departamento }}
+                        </button>
+                    </h2>
+                </div>
 
-    {% for turno, avaliacoes in turnos.items %}
-        <h3>Turno: {{ turno }}</h3>
-
-        <ul>
-            {% for avaliacao in avaliacoes %}
-                <li>
-                    <a href="{% url 'detalhes_avaliacao_rh' avaliacao.id %}">
-                        Avaliação de {{ avaliacao.colaborador_avaliado }} - {{ avaliacao.data_avaliacao }}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% endfor %}
-{% endfor %}
-
+                <div id="collapse-{{ forloop.counter }}" class="collapse" aria-labelledby="heading-{{ forloop.counter }}" data-parent="#departamentosAccordion">
+                    <div class="card-body">
+                        {% for turno, avaliacoes in turnos.items %}
+                            <div class="mb-3">
+                                <h3 class="h5">Turno: {{ turno }}</h3>
+                                <ul class="list-group">
+                                    {% for avaliacao in avaliacoes %}
+                                        <li class="list-group-item">
+                                            <a href="{% url 'detalhes_avaliacao_rh' avaliacao.id %}">
+                                                Avaliação de {{ avaliacao.colaborador_avaliado.nome }} - {{ avaliacao.data_avaliacao|date:"d/m/Y" }}
+                                            </a>
+                                            <br>
+                                            <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

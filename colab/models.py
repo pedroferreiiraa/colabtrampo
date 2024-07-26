@@ -9,6 +9,7 @@ class Colaborador(AbstractUser):
     funcao = models.CharField(max_length=200, blank=True)
     is_lider = models.BooleanField(default=False)
     is_coordenador = models.BooleanField(default=False)
+    is_rh = models.BooleanField(default=False)
     turno = models.ForeignKey('Turno', on_delete=models.CASCADE, null=True, blank=True)
     data_admissao = models.DateTimeField(blank=True, null=True)
 
@@ -110,7 +111,9 @@ class Avaliacao(models.Model):
         for resposta in self.respostas.all():
             respostas[resposta.pergunta.id] = resposta.nota
         return respostas
-
+    
+    def __str__(self):
+        return f"Avaliação de {self.nome_completo}"
     
 class Resposta(models.Model):
     usuario = models.ForeignKey(Colaborador, on_delete=models.CASCADE)  # Adiciona o campo usuário
