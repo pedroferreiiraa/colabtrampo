@@ -4,11 +4,21 @@ from .models import Colaborador, Departamento
 from .models import Avaliacao, Pergunta, Resposta, AvaliacaoLider, RespostaLider
 
 class ColaboradorForm(UserCreationForm):
-    departamento = forms.ModelChoiceField(queryset=Departamento.objects.all())
+    departamento = forms.ModelChoiceField(queryset=Departamento.objects.all())    
+    data_admissao = forms.DateTimeField(
+        input_formats=['%d/%m/%Y'],
+        widget=forms.DateInput(format='%d/%m/%Y', attrs={'class': 'form-control'})
+    )
 
     class Meta:
         model = Colaborador
+        
         fields = ('nome', 'username', 'password1', 'password2', 'departamento', 'turno', 'data_admissao', 'funcao', 'is_lider', 'is_coordenador', 'is_rh')
+        labels = {
+            'username': 'Usuário',
+            'password1': 'Senha',
+            'password2': 'Senha'
+        }
 
 class AvaliacaoForm(forms.ModelForm):
     class Meta:
@@ -30,7 +40,7 @@ class AvaliacaoForm(forms.ModelForm):
             'pdi': 'PDI - Plano de Desenvolvimento Individual',
             'metas': 'Metas',
             'alinhamento_semestral': 'Alinhamento Semestral',
-            'comentarios': 'Comentários Adicionais'
+            'comentarios': 'Comentários Adicionais' 
         }
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
