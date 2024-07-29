@@ -151,6 +151,7 @@ class AvaliacaoLider(models.Model):
         return respostas
 
 class RespostaLider(models.Model):
+    colaborador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='respostas_lider', null=True, blank=True)  # Referência ao usuário
     avaliacao = models.ForeignKey(AvaliacaoLider, on_delete=models.CASCADE, related_name='respostas_lider')
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
     nota = models.IntegerField()
@@ -159,4 +160,4 @@ class RespostaLider(models.Model):
     class Meta:
         db_table = 'resposta_lider'
         verbose_name = "Resposta do Líder"
-        verbose_name_plural = "Respostas dos Líderes"   
+        verbose_name_plural = "Respostas dos Líderes"

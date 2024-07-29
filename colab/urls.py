@@ -11,9 +11,10 @@ urlpatterns = [
 
     #path('avaliacoes/', views.todas_avaliacoes, name='todas_avaliacoes'), # Isso aqui só ficará visível pro RH
 
-
     path('avaliacoes_rh/', views.todas_avaliacoes_rh, name='visualizar_avaliacoes_rh'),
     path('avaliacoes_rh/<int:avaliacao_id>/', views.detalhes_avaliacao_rh, name='detalhes_avaliacao_rh'),
+    path('avaliacoes_rh/departamento/<int:departamento_id>/', views.avaliacoes_departamento, name='avaliacoes_departamento'),
+
 
     path('realizar_avaliacao/', realizar_avaliacao, name='realizar_avaliacao'),
     path('realizar_avaliacao_colaborador/<int:colaborador_id>/', realizar_avaliacao_colaborador, name='realizar_avaliacao_colaborador'),

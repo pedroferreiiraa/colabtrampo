@@ -7,7 +7,7 @@ from django.contrib import messages
 
 from django.db.models import Prefetch
 from .forms import ColaboradorForm, AvaliacaoForm, Pergunta, AvaliacaoLiderForm, AvaliacaoLider
-from .models import Avaliacao, Resposta, Colaborador
+from .models import Avaliacao, Resposta, Colaborador, Departamento, RespostaLider
 
 def login_view(request):
     if request.method == 'POST':
@@ -182,47 +182,9 @@ def avaliacao_detalhes(request, avaliacao_id):
         'media_lider': media_lider,
     })
 
-def calcular_media(respostas):
-    # Exemplo de função para calcular a média das respostas
-    if not respostas:
-        return None
-    total = sum([resposta.nota for resposta in respostas])  # Supondo que a resposta tenha um campo nota
-    return total / len(respostas)
-    
 
-# def avaliacao_detalhes(request, avaliacao_id):
-#     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
-    
-#     # Obter todas as perguntas
-#     perguntas = Pergunta.objects.all()
-#     respostas_por_topico = {}
-#     respostas = avaliacao.get_respostas()
 
-#     for pergunta in perguntas:
-#         topico_nome = pergunta.topico.nome
-#         if topico_nome not in respostas_por_topico:
-#             respostas_por_topico[topico_nome] = {'pares': [], 'media': None}
-#         nota = respostas.get(pergunta.id)
-#         if nota is not None:
-#             respostas_por_topico[topico_nome]['pares'].append((pergunta, nota))
-
-#     # Calcular médias
-#     for topico, dados in respostas_por_topico.items():
-#         notas = [nota for pergunta, nota in dados['pares']]
-#         if notas:
-#             dados['media'] = sum(notas) / len(notas)
-#         else:
-#             dados['media'] = None
-
-#     # Obter respostas textuais do usuário
-#     respostas_textuais = avaliacao.respostas.filter(texto__isnull=False)
-
-#     return render(request, 'avaliacao_detalhes.html', {
-#         'avaliacao': avaliacao,
-#         'respostas_por_topico': respostas_por_topico,
-#         'respostas_textuais': respostas_textuais,
-#     })
-
+@login_required
 def todas_avaliacoes(request):
     # Verificar se o usuário é um líder
     if not request.user.is_lider:
@@ -291,41 +253,87 @@ def todas_avaliacoes_rh(request):
         'avaliacoes_por_departamento': avaliacoes_por_departamento,
     })
 
+# @login_required
+# def detalhes_avaliacao_rh(request, avaliacao_id):
+#     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
+    
+#     # Obter todas as perguntas e tópicos
+#     perguntas = Pergunta.objects.all()
+#     topicos = Pergunta.objects.all()
+#     respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.colaborador_avaliado_id)
+#     respostas_lider = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.avaliador_id)
+    
+#     # Organizar respostas por tópico
+#     respostas_por_topico = {topico.texto: {'colaborador': [], 'lider': [], 'media_colaborador': None, 'media_lider': None} for topico in topicos}
+    
+#     for resposta in respostas_colaborador:
+#         respostas_por_topico[resposta.pergunta.topico.nome]['colaborador'].append(resposta)
+    
+#     for resposta in respostas_lider:
+#         respostas_por_topico[resposta.pergunta.topico.nome]['lider'].append(resposta)
+    
+#     # Calcular médias por tópico
+#     for topico, dados in respostas_por_topico.items():
+#         dados['media_colaborador'] = calcular_media(dados['colaborador'])
+#         dados['media_lider'] = calcular_media(dados['lider'])
+
+#     return render(request, 'avaliacao_detalhes.html', {
+#         'avaliacao': avaliacao,
+#         'respostas_por_topico': respostas_por_topico,
+#     })
+
+def calcular_media(notas):
+    if notas:
+        # Assuming notas is a queryset of Resposta objects with a 'nota' field
+        total = sum(resposta.nota for resposta in notas)  # Sum all the 'nota' values
+        return total / len(notas)
+    return None
+
+@login_required
 def detalhes_avaliacao_rh(request, avaliacao_id):
     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
     
-    # Filtra as respostas do colaborador e do líder usando IDs
-    respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.colaborador_avaliado_id)
-    respostas_lider = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.avaliador_id)
-
-    # Agrupa as respostas por departamento e turno
-    respostas_por_departamento_turno = {}
+    perguntas = Pergunta.objects.all()
+    respostas_por_topico = {}
     
-    departamento = avaliacao.area  # Supondo que 'area' representa o departamento
-    turno = avaliacao.periodo_referencia  # Supondo que 'periodo_referencia' representa o turno
+    # Obter todas as respostas do colaborador associadas à avaliação
+    respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.colaborador_avaliado)
+    respostas_lider = RespostaLider.objects.filter(avaliacao__avaliacao_original=avaliacao, colaborador=avaliacao.colaborador_avaliado)
     
-    if departamento not in respostas_por_departamento_turno:
-        respostas_por_departamento_turno[departamento] = {}
+    for pergunta in perguntas:
+        topico_nome = pergunta.topico.nome
+        if topico_nome not in respostas_por_topico:
+            respostas_por_topico[topico_nome] = {
+                'pares_colaborador': [],
+                'pares_lider': [],
+                'media_colaborador': None,
+                'media_lider': None
+            }
+        
+        respostas_por_topico[topico_nome]['pares_colaborador'].extend(
+            [resposta for resposta in respostas_colaborador if resposta.pergunta == pergunta]
+        )
+        
+        respostas_por_topico[topico_nome]['pares_lider'].extend(
+            [resposta for resposta in respostas_lider if resposta.pergunta == pergunta]
+        )
     
-    if turno not in respostas_por_departamento_turno[departamento]:
-        respostas_por_departamento_turno[departamento][turno] = {'colaborador': [], 'lider': []}
+    # Calcular médias por tópico
+    for topico, dados in respostas_por_topico.items():
+        dados['media_colaborador'] = calcular_media(dados['pares_colaborador'])
+        dados['media_lider'] = calcular_media(dados['pares_lider'])
     
-    respostas_por_departamento_turno[departamento][turno]['colaborador'].extend(respostas_colaborador)
-    respostas_por_departamento_turno[departamento][turno]['lider'].extend(respostas_lider)
-    
-     #Calcula médias
-    media_colaborador = calcular_media(respostas_colaborador)
-    media_lider = calcular_media(respostas_lider)
-    
-    return render(request, 'detalhes_avaliacao.html', {
+    return render(request, 'detalhes_avaliacao_rh.html', {
         'avaliacao': avaliacao,
-        'respostas_por_departamento_turno': respostas_por_departamento_turno,
-        'media_colaborador': media_colaborador,
-        'media_lider': media_lider,
+        'respostas_por_topico': respostas_por_topico,
     })
 
-def calcular_media(respostas):
-    if not respostas:
-        return None
-    total = sum([resposta.nota for resposta in respostas])
-    return total / len(respostas)
+@login_required
+def avaliacoes_departamento(request, departamento_id):
+    departamento = get_object_or_404(Departamento, id=departamento_id)
+    avaliacoes = Avaliacao.objects.filter(colaborador_avaliado__departamento=departamento)
+    
+    return render(request, 'avaliacoes_departamento.html', {
+        'departamento': departamento,
+        'avaliacoes': avaliacoes,
+    })

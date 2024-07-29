@@ -1,29 +1,82 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>Detalhes da Avaliação</h1>
-  <p><strong>Avaliação:</strong> {{ avaliacao }}</p>
+<div class="container mt-4">
+    <h2>Detalhes da Avaliação</h2>
 
-  {% for departamento, turnos in respostas_por_departamento_turno.items %}
-    <h2>Departamento: {{ departamento }}</h2>
-    {% for turno, respostas in turnos.items %}
-      <h3>Turno: {{ turno }}</h3>
-      <h4>Respostas do Colaborador</h4>
-      {% for resposta in respostas.colaborador %}
-        <p>Pergunta: {{ resposta.pergunta.texto }}</p>
-        <p>Nota: {{ resposta.nota }}</p>
-        <p>Comentário: {{ resposta.texto }}</p>
-      {% endfor %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="card-title">Informações da Avaliação</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado }}</p>
+            <p><strong>Avaliador:</strong> {{ avaliacao.avaliador }}</p>
+            <p><strong>Data da Avaliação:</strong> {{ avaliacao.data_avaliacao }}</p>
+        </div>
+    </div>
 
-      <h4>Respostas do Líder</h4>
-      {% for resposta in respostas.lider %}
-        <p>Pergunta: {{ resposta.pergunta.texto }}</p>
-        <p>Nota: {{ resposta.nota }}</p>
-        <p>Comentário: {{ resposta.texto }}</p>
-      {% endfor %}
-    {% endfor %}
-  {% endfor %}
+    <h3>Respostas por Tópico</h3>
+    
+    <div class="accordion" id="accordionTopicos">
+        {% for topico, dados in respostas_por_topico.items %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse{{ forloop.counter }}">
+                    Tópico: {{ topico }}
+                </button>
+            </h2>
+            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse show" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#accordionTopicos">
+                <div class="accordion-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>Respostas do Colaborador</h5>
+                            <ul class="list-group">
+                                {% for resposta in dados.pares_colaborador %}
+                                <li class="list-group-item">
+                                    <strong>{{ resposta.pergunta.texto }}:</strong> {{ resposta.nota }}
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item">Nenhuma resposta registrada.</li>
+                                {% endfor %}
+                            </ul>
+                            {% if dados.media_colaborador is not None %}
+                            <p><strong>Média do Colaborador:</strong> {{ dados.media_colaborador|floatformat:2 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Respostas do Líder</h5>
+                            <ul class="list-group">
+                                {% for resposta in dados.pares_lider %}
+                                <li class="list-group-item">
+                                    <strong>{{ resposta.pergunta.texto }}:</strong> {{ resposta.nota }}
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item">Nenhuma resposta registrada.</li>
+                                {% endfor %}
+                            </ul>
+                            {% if dados.media_lider is not None %}
+                            <p><strong>Média do Líder:</strong> {{ dados.media_lider|floatformat:2 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 
-  <h4>Média do Colaborador: {{ media_colaborador }}</h4>
-  <h4>Média do Líder: {{ media_lider }}</h4>
+    <div class="mt-4">
+        <h3>Respostas Textuais</h3>
+        <ul class="list-group">
+            {% for resposta in respostas_textuais %}
+            <li class="list-group-item">
+                <strong>{{ resposta.pergunta.texto }}:</strong> {{ resposta.texto }}
+            </li>
+            {% empty %}
+            <li class="list-group-item">Nenhuma resposta textual registrada.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>
 {% endblock %}
