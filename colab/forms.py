@@ -14,7 +14,7 @@ class AvaliacaoForm(forms.ModelForm):
     class Meta:
         model = Avaliacao
         fields = [
-            'colaborador_avaliado','avaliador', 'data_avaliacao',
+            'colaborador_avaliado', 'data_avaliacao',
             'competencias', 'compromissos', 'integracao', 'caracteristicas', 'pontos_melhoria', 
             'pdi', 'metas', 'alinhamento_semestral', 'comentarios'
         ]
@@ -55,7 +55,6 @@ class AvaliacaoForm(forms.ModelForm):
             # Define o campo 'nome_completo' com o nome do usuário atual
             #self.fields['nome_completo'].initial = self.user.get_full_name()
             # Filtra o campo 'avaliador' para exibir apenas os líderes
-            self.fields['avaliador'].queryset = Colaborador.objects.filter(is_lider=True)
 
         for field_name in self.fields:
             self.fields[field_name].widget.attrs.update({
@@ -104,26 +103,15 @@ class AvaliacaoForm(forms.ModelForm):
 class AvaliacaoLiderForm(forms.ModelForm):
     class Meta:
         model = AvaliacaoLider
-        fields = ['avaliacao_original', 'colaborador_avaliado', 'avaliador', 'pontos_melhoria', 'pdi', 'metas', 'alinhamento_semestral', 'comentarios']
+        fields = ['colaborador_avaliado','pontos_melhoria', 'pdi', 'metas', 'alinhamento_semestral', 'comentarios']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['avaliacao_original'] = forms.ModelChoiceField(
-            queryset=Avaliacao.objects.all(),
-            label='Avaliação Original',
-            required=True
-        )
         self.fields['colaborador_avaliado'] = forms.ModelChoiceField(
             queryset=Colaborador.objects.all(),
             label='Nome Completo',
             required=True
         )
-        self.fields['avaliador'] = forms.ModelChoiceField(
-            queryset=Colaborador.objects.filter(is_lider=True),
-            label='Avaliador',
-            required=True
-        )
-
         # Adiciona perguntas dinamicamente
         perguntas = Pergunta.objects.all()
         for pergunta in perguntas:

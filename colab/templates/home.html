@@ -11,11 +11,9 @@
                     <h3>Informações básicas</h3>
                 </div>
                 <div class="card-body">
-                  <p>Função atual: {{ user.funcao }}</p>
-                  <p>Departamento: {{ user.departamento }}</p>
-                  <p>Data de admissão: {{ user.data_admissao|date:"d/m/Y" }}</p>
-
-
+                    <p>Função atual: {{ user.funcao }}</p>
+                    <p>Departamento: {{ user.departamento }}</p>
+                    <p>Data de admissão: {{ user.data_admissao|date:"d/m/Y" }}</p>
                 </div>
             </div>
 
@@ -25,36 +23,15 @@
                     <h3>Realize sua avaliação clicando no link abaixo</h3>
                 </div>
                 <div class="card-body">
-                    <a class="nav-link btn-primary text-center text-light" href="{% url 'realizar_avaliacao' %}">Realizar avaliação</a>
+                    <a class="nav-link btn-primary text-center text-light" href="{% url 'realizar_avaliacao_colaborador' %}">Realizar avaliação</a>
                 </div>
             </div>
-        {% endif %}
+            {% endif %}
         
             {% if user.is_lider %}
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3>Avaliações do Seu Setor</h3>
-                </div>
-                <div class="card-body">
-                    {% if avaliacoes_setor %}
-                        <ul class="list-group">
-                            {% for avaliacao in avaliacoes_setor %}
-                                <li class="list-group-item">
-                                    <strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado.nome }}<br>
-                                    <strong>Avaliador:</strong> {{ avaliacao.avaliador.nome }}<br>
-                                    <strong>Data:</strong> {{ avaliacao.data_criacao }}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">Não há avaliações no seu setor.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3>Colaboradores do Seu Setor</h3>
+                    <h3>Colaboradores do Seu Setor</h3> 
                 </div>
                 <div class="card-body">
                     {% if colaboradores_setor %}
@@ -63,10 +40,7 @@
                                 <li class="list-group-item">
                                     <strong>Colaborador:</strong> {{ colaborador.nome }}<br>
                                     <strong>Setor:</strong> {{ colaborador.departamento.nome }}<br>
-                                    <form method="get" action="{% url 'realizar_avaliacao_colaborador' colaborador.id %}">
-                                        <input type="hidden" name="colaborador_id" value="{{ colaborador.id }}">
-                                        <button type="submit" class="btn btn-secondary btn-sm">Avaliar</button>
-                                    </form>
+                                    <a href="{% url 'realizar_avaliacao_lider' colaborador.id %}" class="btn btn-secondary btn-sm">Avaliar</a>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -75,8 +49,7 @@
                     {% endif %}
                 </div>
             </div>
-        {% endif %}
-
+            {% endif %}
         </div>
     </div>
 </div>

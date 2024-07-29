@@ -83,7 +83,6 @@ class Pergunta(models.Model):
         return self.texto  
         
 class Avaliacao(models.Model):
-    avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_realizadas')
     colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas', default='')
     nome_completo = models.CharField(max_length=100, default='')
     data_admissao = models.DateField(default=date.today)
@@ -129,7 +128,6 @@ class Resposta(models.Model):
    
 
 class AvaliacaoLider(models.Model):
-    avaliacao_original = models.ForeignKey(Avaliacao, on_delete=models.CASCADE, blank=True, related_name='avaliacao_original')
     colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_lideradas')
     avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_lider_realizadas')
     data_criacao = models.DateTimeField(auto_now_add=True)

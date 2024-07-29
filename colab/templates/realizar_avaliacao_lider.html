@@ -23,11 +23,11 @@
             <h1>Avaliação</h1>
         </header>
         
-        <form method="post" action="{% url 'realizar_avaliacao' %}">
+        <form method="post" action="{% url 'realizar_avaliacao_lider' colaborador.id %}">
             {% csrf_token %}
             
             <div class="form-header">
-                <p class="lead">Realize a avaliação, {{ user.nome }}</p>
+                <p class="lead">Realize a do {{ colaborador.nome }}</p>
             </div>
 
             <!-- Renderiza o formulário com estilo -->

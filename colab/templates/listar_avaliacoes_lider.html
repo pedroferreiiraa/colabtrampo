@@ -1,0 +1,21 @@
+<!-- listar_avaliacoes_lider.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Avaliações realizadas pelo Líder para {{ colaborador.nome }}</h2>
+    
+    <h3>Avaliações do Líder</h3>
+    <ul class="list-group">
+        {% for avaliacao in avaliacoes_lider %}
+        <li class="list-group-item">
+            <a href="{% url 'detalhes_avaliacao' avaliacao.id %}">
+                Avaliação realizada em {{ avaliacao.data_criacao|date:"d/m/Y" }}
+            </a>
+        </li>
+        {% empty %}
+        <li class="list-group-item">Nenhuma avaliação encontrada.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

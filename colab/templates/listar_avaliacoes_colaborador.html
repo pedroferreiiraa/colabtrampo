@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Avaliações de {{ colaborador.nome }}</h2>
+    
+    <h3>Avaliações realizadas pelo Colaborador</h3>
+    <ul class="list-group">
+        {% for avaliacao in avaliacoes_recebidas %}
+        <li class="list-group-item">
+            <a href="{% url 'detalhes_avaliacao' avaliacao.id %}">
+                Avaliação realizada em {{ avaliacao.data_avaliacao }}
+            </a>
+        </li>
+        {% empty %}
+        <li class="list-group-item">Nenhuma avaliação recebida.</li>
+        {% endfor %}
+    </ul>
+
+    {% if colaborador.is_lider %}
+    <h3>Avaliações Realizadas pelo Líder</h3>
+    <ul class="list-group">
+        {% for avaliacao in avaliacoes_lider %}
+        <li class="list-group-item">
+            <a href="{% url 'detalhes_avaliacao' avaliacao.id %}">
+                Avaliação realizada em {{ avaliacao.data_avaliacao }}
+            </a>
+        </li>
+        {% empty %}
+        <li class="list-group-item">Nenhuma avaliação realizada pelo líder.</li>
+        {% endfor %}
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}

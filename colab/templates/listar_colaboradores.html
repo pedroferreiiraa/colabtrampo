@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Colaboradores do Departamento: {{ departamento.nome }}</h2>
+    <ul class="list-group">
+        {% for colaborador in colaboradores %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{% url 'listar_avaliacoes_colaborador' colaborador.id %}">{{ colaborador.nome }}</a>
+            {% if colaborador.is_lider %}
+                <a href="{% url 'listar_avaliacoes_lider' colaborador.id %}" class="btn btn-info btn-sm">Líder do setor</a>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li class="list-group-item">Nenhum colaborador encontrado.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Departamentos</h2>
+    <ul class="list-group">
+        {% for departamento in departamentos %}
+        <li class="list-group-item">
+            <a href="{% url 'listar_colaboradores' departamento.id %}">{{ departamento.nome }}</a>
+        </li>
+        {% empty %}
+        <li class="list-group-item">Nenhum departamento encontrado.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

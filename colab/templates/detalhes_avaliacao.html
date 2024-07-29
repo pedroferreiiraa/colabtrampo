@@ -1,31 +1,59 @@
-<!-- detalhes_avaliacao.html -->
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Detalhes da Avaliação</h1>
-
-<h2>Avaliação de {{ avaliacao.colaborador_avaliado }}</h2>
-<p>Data da Avaliação: {{ avaliacao.data_avaliacao }}</p>
-
-<h3>Respostas do Colaborador</h3>
-<ul>
-    {% for resposta in respostas_colaborador %}
-        <li>{{ resposta.pergunta }}: {{ resposta.nota }}</li>
-    {% empty %}
-        <li>Nenhuma resposta encontrada para o colaborador.</li>
-    {% endfor %}
-</ul>
-
-<h3>Respostas do Líder</h3>
-<ul>
-    {% for resposta in respostas_lider %}
-        <li>{{ resposta.pergunta }}: {{ resposta.nota }}</li>
-    {% empty %}
-        <li>Nenhuma resposta encontrada para o líder.</li>
-    {% endfor %}
-</ul>
-
-<p>Média das respostas do colaborador: {{ media_colaborador }}</p>
-<p>Média das respostas do líder: {{ media_lider }}</p>
-
+<div class="container mt-4">
+    <h2>Detalhes da Avaliação</h2>
+    <div class="card mb-4">
+        <div class="card-header">
+            Avaliação realizada em {{ avaliacao.data_avaliacao }}
+        </div>
+        <div class="card-body">
+            <p><strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado }}</p>
+            <p><strong>Nome Completo:</strong> {{ avaliacao.nome_completo }}</p>
+            <p><strong>Cargo Atual:</strong> {{ avaliacao.cargo_atual }}</p>
+            <p><strong>Área:</strong> {{ avaliacao.area }}</p>
+            <p><strong>Período de Referência:</strong> {{ avaliacao.periodo_referencia }}</p>
+            <p><strong>Competências:</strong> {{ avaliacao.competencias }}</p>
+            <p><strong>Compromissos:</strong> {{ avaliacao.compromissos }}</p>
+            <p><strong>Integração:</strong> {{ avaliacao.integracao }}</p>
+            <p><strong>Características:</strong> {{ avaliacao.caracteristicas }}</p>
+            <p><strong>Pontos de Melhoria:</strong> {{ avaliacao.pontos_melhoria }}</p>
+            <p><strong>PDI:</strong> {{ avaliacao.pdi }}</p>
+            <p><strong>Metas:</strong> {{ avaliacao.metas }}</p>
+            <p><strong>Alinhamento Semestral:</strong> {{ avaliacao.alinhamento_semestral }}</p>
+            <p><strong>Comentários:</strong> {{ avaliacao.comentarios }}</p>
+        </div>
+    </div>
+    
+    <h3>Respostas</h3>
+    <ul class="list-group mb-4">
+        {% for resposta in respostas %}
+        <li class="list-group-item">
+            <strong>Pergunta:</strong> {{ resposta.pergunta.texto }}<br>
+            <strong>Resposta:</strong> {{ resposta.texto }}<br>
+            <strong>Nota:</strong> {{ resposta.nota }}
+        </li>
+        {% empty %}
+        <li class="list-group-item">Nenhuma resposta encontrada.</li>
+        {% endfor %}
+    </ul>
+    
+    {% if avaliacoes_lider %}
+    <h3>Avaliações do Líder</h3>
+    <ul class="list-group mb-4">
+        {% for avaliacao_lider in avaliacoes_lider %}
+        <li class="list-group-item">
+            <strong>Avaliação realizada em:</strong> {{ avaliacao_lider.data_criacao }}<br>
+            <strong>Pontos de Melhoria:</strong> {{ avaliacao_lider.pontos_melhoria }}<br>
+            <strong>PDI:</strong> {{ avaliacao_lider.pdi }}<br>
+            <strong>Metas:</strong> {{ avaliacao_lider.metas }}<br>
+            <strong>Alinhamento Semestral:</strong> {{ avaliacao_lider.alinhamento_semestral }}<br>
+            <strong>Comentários:</strong> {{ avaliacao_lider.comentarios }}
+        </li>
+        {% empty %}
+        <li class="list-group-item">Nenhuma avaliação do líder encontrada.</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
 {% endblock %}
