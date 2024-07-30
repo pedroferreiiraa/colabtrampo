@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Topico, Pergunta, Colaborador, Departamento, Avaliacao, Turno, Resposta
+from .models import Topico, Pergunta, Colaborador, Departamento, Avaliacao, Turno, Resposta, AvaliacaoLider
 # Register your models here.
 
 admin.site.register(Topico)
@@ -9,4 +9,4 @@ admin.site.register(Departamento)
 admin.site.register(Avaliacao)
 admin.site.register(Turno)
 admin.site.register(Resposta)
-
+admin.site.register(AvaliacaoLider)

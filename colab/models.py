@@ -83,6 +83,7 @@ class Pergunta(models.Model):
         return self.texto  
         
 class Avaliacao(models.Model):
+    #avaliador_id = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliador_id', blank=True, null=True)
     colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas', default='')
     nome_completo = models.CharField(max_length=100, default='')
     data_admissao = models.DateField(default=date.today)
@@ -147,6 +148,9 @@ class AvaliacaoLider(models.Model):
         for resposta in self.respostas_lider.all():
             respostas[resposta.pergunta.id] = resposta.nota
         return respostas
+    
+    def __str__(self):
+        return f"Avaliação de {self.avaliador} para {self.colaborador_avaliado}"
 
 class RespostaLider(models.Model):
     colaborador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='respostas_lider', null=True, blank=True)  # Referência ao usuário

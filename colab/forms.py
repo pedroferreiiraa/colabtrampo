@@ -24,7 +24,7 @@ class AvaliacaoForm(forms.ModelForm):
     class Meta:
         model = Avaliacao
         fields = [
-            'colaborador_avaliado', 'data_avaliacao',
+            'colaborador_avaliado', 'data_avaliacao', 'nome_completo',
             'competencias', 'compromissos', 'integracao', 'caracteristicas', 'pontos_melhoria', 
             'pdi', 'metas', 'alinhamento_semestral', 'comentarios'
         ]

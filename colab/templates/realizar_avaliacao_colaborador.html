@@ -19,16 +19,92 @@
 </head>
 <body>
     <div class="container">
+
+
         <header class="text-center mb-4">
-            <h1>Avaliação</h1>
+            <h1>Avaliação de desempenho de colaboradores</h1>
         </header>
-        
-        <form method="post" action="{% url 'realizar_avaliacao_colaborador' %}">
-            {% csrf_token %}
-            
-            <div class="form-header">
-                <p class="lead">Realize a avaliação, {{ user.nome }}</p>
+    
+
+            <div class="container border">
+                <h5 class="text-center mt-1">Informações do colaborador</h5>
+                <div class="row mb-1">
+                <div class="col">
+                Nome completo: {{ colaborador.nome }}
+                </div>
+                <div class="col">
+                    Data de admissão: {{ colaborador.data_admissao|date:"d/m/Y" }}
+                </div>
+                </div>
+                <div class="row mb-1">
+                    <div class="col">
+                    Cargo atual: {{ colaborador.funcao }}
+                    </div>
+                    <div class="col">
+                        Data cargo? Verificar possivel mudanças depois
+                    </div>
+                </div>
             </div>
+
+
+            <div class="container border mt-2">
+
+                <h5 class="text-center mt-1">Período de Avaliação</h5>
+
+                <div class="row mb-1">
+                    <div class="col">
+                   Período referencia: 
+                    </div>
+
+                    <div class="col">
+                        Data inicial:
+                        <input type="date" name="data_inicial" id="data_inicial">
+                    </div>
+                    <div class="col">
+                      Data final:
+                      <input type="date" name="data_inicial" id="data_inicial">
+                    </div>
+                    <div class="col">
+                      Data avaliação:
+                      <input type="date" name="data_inicial" id="data_inicial">
+                    </div>
+                </div>
+            </div>
+
+            <div class="container border mt-2">
+
+                <h5 class="text-center mt-1">Instruções</h5>
+                <p>Preenchimento: 			</br>	
+                    Avaliado: Preencha a coluna "AUTO AVALIAÇÃO" com notas de 1 a 10 para cada indicador; 	</br>							
+                    Leia atentamente a descrição de cada indicador e avalie o seu desempenho.						</br>
+                </p>
+            </div>
+
+            <div class="container border mt-2">
+                <div class="row">
+                    <h5 class="text-center mt-1">Níveis de escala:</h5>
+                    <div class="col">
+                    </br>
+                        NOTAS </br>
+                        1, 2, 3 e 4.</br>
+                        5 e 6.</br>
+                        7 e 8.</br>
+                        9 e 10.</br>
+                    </div>
+                    <div class="col">
+                        </br>
+                        NÍVEL</br>
+                        Insatisfatório</br>
+                        Regular</br>
+                        Bom</br>
+                        Excelente</br>
+                    </div>
+                </div>
+            </div>
+
+        <form class="mt-4" method="post" action="{% url 'realizar_avaliacao_colaborador' %}">
+            {% csrf_token %}
+        
 
             <!-- Renderiza o formulário com estilo -->
             <div class="mb-3">

@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 
 from .forms import ColaboradorForm, AvaliacaoForm, Pergunta, AvaliacaoLiderForm, AvaliacaoLider
-from .models import Avaliacao, Resposta, Colaborador, Departamento, RespostaLider
+from .models import Avaliacao, Resposta, Colaborador, Departamento, RespostaLider, AvaliacaoLider
 
 def login_view(request):
     if request.method == 'POST':
@@ -35,7 +35,6 @@ def cadastro_view(request):
 @login_required
 def home_view(request):
     user = request.user
-
     # Obter avaliações realizadas pelo usuário
     avaliacoes_recebidas = Avaliacao.objects.filter(colaborador_avaliado=user)
 
@@ -55,18 +54,21 @@ def home_view(request):
         'avaliacoes_setor': avaliacoes_setor,
         'colaboradores_setor': colaboradores_setor,
         'is_lider': user.is_lider,
-        'user': user  # Certifique-se de passar o usuário para o contexto
+        'user': user , # Certifique-se de passar o usuário para o contexto
     })
 
 @login_required
 def realizar_avaliacao_colaborador(request):
     perguntas = Pergunta.objects.all()
-
+    informacoes = Colaborador.objects.all()
+    colaborador = request.user
+    
     if request.method == 'POST':
         form = AvaliacaoForm(request.POST, user=request.user)
         
         if form.is_valid():
             avaliacao = form.save(commit=False)
+            avaliacao.colaborador_avaliado = request.user
             avaliacao.save()
             
             for pergunta in perguntas:
@@ -86,9 +88,47 @@ def realizar_avaliacao_colaborador(request):
     return render(request, 'realizar_avaliacao_colaborador.html', {
         'form': form,
         'perguntas': perguntas,
-        'colaboradores': Colaborador.objects.all(),
-        'avaliadores': Colaborador.objects.filter(is_lider=True),
+        'colaboradores': informacoes,
+        'avaliadores': informacoes.filter(is_lider=True),
+        'avaliacao': Avaliacao.objects.all(),
+        'colaborador': colaborador,
     })
+
+
+# @login_required
+# def realizar_avaliacao_colaborador(request):
+#     perguntas = Pergunta.objects.all()
+#     avaliacao = Avaliacao.objects.all()
+#     informacoes = Colaborador.objects.all()
+
+#     if request.method == 'POST':
+#         form = AvaliacaoForm(request.POST, user=request.user)
+        
+#         if form.is_valid():
+#             avaliacao = form.save(commit=False)
+#             avaliacao.save()
+            
+#             for pergunta in perguntas:
+#                 resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
+#                 if resposta is not None:
+#                     Resposta.objects.create(
+#                         avaliacao=avaliacao,
+#                         pergunta=pergunta,
+#                         nota=resposta,
+#                         usuario=request.user
+#                     )
+            
+#             return redirect('sucesso')
+#     else:
+#         form = AvaliacaoForm(user=request.user)
+    
+#     return render(request, 'realizar_avaliacao_colaborador.html', {
+#         'form': form,
+#         'perguntas': perguntas,
+#         'colaboradores': Colaborador.objects.all(),
+#         'avaliadores': Colaborador.objects.filter(is_lider=True),
+#         'avaliacao': avaliacao,
+#     })
 
 @login_required
 def realizar_avaliacao_lider(request, colaborador_id):
@@ -268,41 +308,74 @@ def todas_avaliacoes_rh(request):
         'avaliacoes_por_departamento': avaliacoes_por_departamento,
     })
 
-# @login_required
-# def detalhes_avaliacao_rh(request, avaliacao_id):
-#     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
+@login_required
+def detalhes_avaliacao(request, avaliacao_id):
+    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
+    avaliador_id = Pergunta.objects.all()
+    # Obter todas as perguntas e tópicos
+    perguntas = Pergunta.objects.all()
+    topicos = Pergunta.objects.all()
+    respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.colaborador_avaliado_id)
+    respostas_lider = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.avaliador_id)
     
-#     # Obter todas as perguntas e tópicos
-#     perguntas = Pergunta.objects.all()
-#     topicos = Pergunta.objects.all()
-#     respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.colaborador_avaliado_id)
-#     respostas_lider = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.avaliador_id)
+    # Organizar respostas por tópico
+    respostas_por_topico = {topico.texto: {'colaborador': [], 'lider': [], 'media_colaborador': None, 'media_lider': None} for topico in topicos}
     
-#     # Organizar respostas por tópico
-#     respostas_por_topico = {topico.texto: {'colaborador': [], 'lider': [], 'media_colaborador': None, 'media_lider': None} for topico in topicos}
+    # for resposta in respostas_colaborador:
+    #     respostas_por_topico[resposta.pergunta.topico.nome]['colaborador'].append(resposta)
     
-#     for resposta in respostas_colaborador:
-#         respostas_por_topico[resposta.pergunta.topico.nome]['colaborador'].append(resposta)
+    for resposta in respostas_lider:
+        respostas_por_topico[resposta.pergunta.topico.nome]['lider'].append(resposta)
     
-#     for resposta in respostas_lider:
-#         respostas_por_topico[resposta.pergunta.topico.nome]['lider'].append(resposta)
-    
-#     # Calcular médias por tópico
-#     for topico, dados in respostas_por_topico.items():
-#         dados['media_colaborador'] = calcular_media(dados['colaborador'])
-#         dados['media_lider'] = calcular_media(dados['lider'])
+    # Calcular médias por tópico
+    for topico, dados in respostas_por_topico.items():
+        dados['media_colaborador'] = calcular_media(dados['colaborador'])
+        dados['media_lider'] = calcular_media(dados['lider'])
 
-#     return render(request, 'avaliacao_detalhes.html', {
-#         'avaliacao': avaliacao,
-#         'respostas_por_topico': respostas_por_topico,
-#     })
+    return render(request, 'detalhes_avaliacao.html', {
+        'avaliacao': avaliacao,
+        'respostas_por_topico': respostas_por_topico,
+        'avaliador_id': avaliador_id,
+        'avaliacao_lider': avaliacao_lider,
+        'perguntas': perguntas,
+        'respostas_colaborador': respostas_colaborador
+    })
 
-def calcular_media(notas):
+def calcular_media_lider(notas):
     if notas:
         # Assuming notas is a queryset of Resposta objects with a 'nota' field
         total = sum(resposta.nota for resposta in notas)  # Sum all the 'nota' values
         return total / len(notas)
     return None
+
+def calcular_media(respostas):
+    if respostas:
+        return sum([resposta.nota for resposta in respostas]) / len(respostas)
+    return None
+
+@login_required
+def detalhes_avaliacao_lider(request, avaliacao_lider_id):
+    avaliacao_lider = get_object_or_404(AvaliacaoLider, id=avaliacao_lider_id)
+    perguntas = Pergunta.objects.all()
+    respostas_lider = RespostaLider.objects.filter(avaliacao=avaliacao_lider)
+    
+    # Organizar respostas por tópico
+    respostas_por_topico = {pergunta.topico.nome: [] for pergunta in perguntas}
+    
+    for resposta in respostas_lider:
+        respostas_por_topico[resposta.pergunta.topico.nome].append(resposta)
+    
+    # Calcular médias por tópico
+    medias_por_topico = {topico: calcular_media(respostas) for topico, respostas in respostas_por_topico.items()}
+
+    return render(request, 'detalhes_avaliacao_lider.html', {
+        'avaliacao_lider': avaliacao_lider,
+        'respostas_por_topico': respostas_por_topico,
+        'medias_por_topico': medias_por_topico,
+    })
+
+
+
 
 @login_required
 def detalhes_avaliacao_rh(request, avaliacao_id):
@@ -378,9 +451,9 @@ def listar_avaliacoes_colaborador(request, colaborador_id):
     return render(request, 'listar_avaliacoes_colaborador.html', context)
 
 
-def detalhes_avaliacao(request, avaliacao_id):
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
-    return render(request, 'detalhes_avaliacao.html', {'avaliacao': avaliacao})
+# def detalhes_avaliacao(request, avaliacao_id):
+#     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
+#     return render(request, 'detalhes_avaliacao.html', {'avaliacao': avaliacao})
 
 @login_required
 def listar_avaliacoes_lider(request, colaborador_id):

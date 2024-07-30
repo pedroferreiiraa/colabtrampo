@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
 <div class="container mt-4">
@@ -9,11 +9,11 @@
         </div>
         <div class="card-body">
             <p><strong>AVALIACAO LIDER:</strong> {{ avaliacao_lider }}</p>
-            <p><strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado }}</p>
-            <p><strong>Nome Completo:</strong> {{ avaliacao.nome_completo }}</p>
-            <p><strong>Cargo Atual:</strong> {{ avaliacao.cargo_atual }}</p>
-            <p><strong>Área:</strong> {{ avaliacao.area }}</p>
-            <p><strong>Avaliador:</strong> {{ avaliacao.avaliador_id}}</p>
+            <p><strong>Colaborador Avaliado:</strong> {{ avaliacao_lider.colaborador_avaliado }}</p>
+            <p><strong>Nome Completo:</strong> {{ avaliacao_lider.nome_completo }}</p>
+            <p><strong>Cargo Atual:</strong> {{ avaliacao_lider.cargo_atual }}</p>
+            <p><strong>Área:</strong> {{ avaliacao_lider.area }}</p>
+            <p><strong>Avaliador:</strong> {{avaliacao_lider.nome_completo}}</p>
             <p><strong>Período de Referência:</strong> {{ avaliacao.periodo_referencia }}</p>
             <p><strong>Competências:</strong> {{ avaliacao.competencias }}</p>
             <p><strong>Compromissos:</strong> {{ avaliacao.compromissos }}</p>
@@ -58,4 +58,5 @@
     </ul>
     {% endif %}
 </div>
-{% endblock %}
+
+{% endblock content %}

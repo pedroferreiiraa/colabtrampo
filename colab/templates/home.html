@@ -17,7 +17,7 @@
                 </div>
             </div>
 
-            {% if not user.is_rh %}
+            {% if not user.is_rh and not user.is_lider %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h3>Realize sua avaliação clicando no link abaixo</h3>
@@ -29,6 +29,16 @@
             {% endif %}
         
             {% if user.is_lider %}
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Realize sua avaliação clicando no link abaixo</h3>
+                </div>
+                <div class="card-body">
+                    <a class="nav-link btn-danger text-center text-light" href="">Avaliacao para lider ficará disponivel em breve</a>
+                </div>
+            </div>
+
             <div class="card mb-4">
                 <div class="card-header">
                     <h3>Colaboradores do Seu Setor</h3> 
