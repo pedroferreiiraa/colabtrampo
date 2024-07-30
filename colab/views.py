@@ -4,9 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+from datetime import date
 
 from .forms import ColaboradorForm, AvaliacaoForm, Pergunta, AvaliacaoLiderForm, AvaliacaoLider
-from .models import Avaliacao, Resposta, Colaborador, Departamento, RespostaLider, AvaliacaoLider
+from .models import Avaliacao, Resposta, Colaborador, Departamento, RespostaLider, AvaliacaoLider, Topico, AvaliacaoPerguntaResposta
 
 def login_view(request):
     if request.method == 'POST':
@@ -57,10 +58,42 @@ def home_view(request):
         'user': user , # Certifique-se de passar o usuário para o contexto
     })
 
-@login_required
+# @login_required
+# def realizar_avaliacao_colaborador(request):
+#     if request.method == 'POST':
+#         form = AvaliacaoForm(request.POST)
+#         if form.is_valid():
+#             # Salvar a avaliação
+#             avaliacao = form.save(commit=False)
+#             avaliacao.avaliador = request.user  # Supondo que o avaliador é o usuário logado
+#             avaliacao.save()
+
+#             # Salvar as respostas
+#             for pergunta in Pergunta.objects.all():
+#                 resposta_texto = request.POST.get(f'resposta_{pergunta.id}')
+#                 if resposta_texto:
+#                     Resposta.objects.create(
+#                         avaliacao=avaliacao,
+#                         pergunta=pergunta,
+#                         texto=resposta_texto
+#                     )
+
+#             return redirect('sucesso')  # Redirecione para uma página de sucesso
+#     else:
+#         form = AvaliacaoForm()
+    
+#     #topicos_perguntas = obter_topicos_e_perguntas()  # Crie uma função para obter tópicos e perguntas
+#     return render(request, 'realizar_avaliacao_colaborador.html', {'form': form})
+
 def realizar_avaliacao_colaborador(request):
     perguntas = Pergunta.objects.all()
-    informacoes = Colaborador.objects.all()
+    topicos_perguntas = {}
+    for pergunta in perguntas:
+        topico = pergunta.topico
+        if topico not in topicos_perguntas:
+            topicos_perguntas[topico] = []
+        topicos_perguntas[topico].append(pergunta)
+    
     colaborador = request.user
     
     if request.method == 'POST':
@@ -72,13 +105,14 @@ def realizar_avaliacao_colaborador(request):
             avaliacao.save()
             
             for pergunta in perguntas:
-                resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
-                if resposta is not None:
-                    Resposta.objects.create(
+                nota = form.cleaned_data.get(f'pergunta_{pergunta.id}_nota')
+                texto = form.cleaned_data.get(f'pergunta_{pergunta.id}_texto')
+                if nota is not None or texto:
+                    AvaliacaoPerguntaResposta.objects.create(
                         avaliacao=avaliacao,
                         pergunta=pergunta,
-                        nota=resposta,
-                        usuario=request.user
+                        nota=nota,
+                        texto=texto
                     )
             
             return redirect('sucesso')
@@ -87,12 +121,44 @@ def realizar_avaliacao_colaborador(request):
     
     return render(request, 'realizar_avaliacao_colaborador.html', {
         'form': form,
-        'perguntas': perguntas,
-        'colaboradores': informacoes,
-        'avaliadores': informacoes.filter(is_lider=True),
-        'avaliacao': Avaliacao.objects.all(),
+        'topicos_perguntas': topicos_perguntas,
         'colaborador': colaborador,
     })
+# def realizar_avaliacao_colaborador(request):
+#     perguntas = Pergunta.objects.all()
+#     informacoes = Colaborador.objects.all()
+#     colaborador = request.user
+    
+#     if request.method == 'POST':
+#         form = AvaliacaoForm(request.POST, user=request.user)
+        
+#         if form.is_valid():
+#             avaliacao = form.save(commit=False)
+#             avaliacao.colaborador_avaliado = request.user
+#             avaliacao.save()
+            
+#             for pergunta in perguntas:
+#                 resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
+#                 if resposta is not None:
+#                     Resposta.objects.create(
+#                         avaliacao=avaliacao,
+#                         pergunta=pergunta,
+#                         nota=resposta,
+#                         usuario=request.user
+#                     )
+            
+#             return redirect('sucesso')
+#     else:
+#         form = AvaliacaoForm(user=request.user)
+    
+#     return render(request, 'realizar_avaliacao_colaborador.html', {
+#         'form': form,
+#         'perguntas': perguntas,
+#         'colaboradores': informacoes,
+#         'avaliadores': informacoes.filter(is_lider=True),
+#         'avaliacao': Avaliacao.objects.all(),
+#         'colaborador': colaborador,
+#     })
 
 
 # @login_required
@@ -132,29 +198,26 @@ def realizar_avaliacao_colaborador(request):
 
 @login_required
 def realizar_avaliacao_lider(request, colaborador_id):
-    colaborador = get_object_or_404(Colaborador, id=colaborador_id)
-    departamento = colaborador.departamento
-    if departamento and departamento.lider:
-        lider = departamento.lider
-    else:
-        # Handle case where the leader is not defined
-        return redirect('home')
-    
+    colaborador_avaliado = get_object_or_404(Colaborador, id=colaborador_id)
+    avaliador = request.user
+
     if request.method == 'POST':
         form = AvaliacaoLiderForm(request.POST)
+        
         if form.is_valid():
-            avaliacao_lider = form.save(commit=False)
-            avaliacao_lider.colaborador_avaliado = colaborador
-            avaliacao_lider.avaliador = lider
-            avaliacao_lider.save()
-            return redirect('sucesso')  # Redirect to a success page or details page
+            avaliacao = form.save(commit=False)
+            avaliacao.colaborador_avaliado = colaborador_avaliado
+            avaliacao.avaliador = avaliador
+            avaliacao.save()
+
+            return redirect('sucesso')
     else:
-        form = AvaliacaoLiderForm(initial={
-            'avaliador': lider,
-            'colaborador_avaliado': colaborador
-        })
-    
-    return render(request, 'realizar_avaliacao_lider.html', {'form': form, 'colaborador': colaborador})
+        form = AvaliacaoLiderForm()
+
+    return render(request, 'realizar_avaliacao_lider.html', {
+        'form': form,
+        'colaborador_avaliado': colaborador_avaliado,
+    })
 
 @login_required
 def salvar_avaliacao_colaborador(request):
@@ -162,13 +225,21 @@ def salvar_avaliacao_colaborador(request):
         # Crie uma nova instância de Avaliacao
         avaliacao = Avaliacao(
             colaborador_avaliado_id=request.POST.get('colaborador_avaliado'),
-            avaliador_id=request.POST.get('avaliador'),
+            nome_completo=request.POST.get('nome_completo'),
+            data_admissao=request.POST.get('data_admissao'),
+            cargo_atual=request.POST.get('cargo_atual'),
+            area=request.POST.get('area'),
+            periodo_referencia=request.POST.get('periodo_referencia'),
+            data_avaliacao=request.POST.get('data_avaliacao'),
+            competencias=request.POST.get('competencias'),
+            compromissos=request.POST.get('compromissos'),
+            integracao=request.POST.get('integracao'),
+            caracteristicas=request.POST.get('caracteristicas'),
             pontos_melhoria=request.POST.get('pontos_melhoria'),
             pdi=request.POST.get('pdi'),
             metas=request.POST.get('metas'),
             alinhamento_semestral=request.POST.get('alinhamento_semestral'),
-            # Se você tiver um campo de data de avaliação, descomente a linha abaixo
-            # data_avaliacao=request.POST.get('data_avaliacao'),
+            comentarios=request.POST.get('comentarios'),
         )
         avaliacao.save()  # Salva a avaliação no banco de dados
 
@@ -176,26 +247,70 @@ def salvar_avaliacao_colaborador(request):
         perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
         for pergunta in perguntas:
             nota = request.POST.get(f'pergunta_{pergunta.id}')  # O nome do campo para a nota deve ser algo como 'pergunta_1', 'pergunta_2', etc.
+            texto = request.POST.get(f'texto_{pergunta.id}', '')  # Se você também tiver um campo de texto para a resposta
             if nota:
-                Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=nota)
+                Resposta.objects.create(
+                    usuario=request.user,  # Supondo que o usuário logado está respondendo
+                    avaliacao=avaliacao,
+                    pergunta=pergunta,
+                    nota=int(nota),  # Certifique-se de converter para int
+                    texto=texto
+                )
 
         return redirect('sucesso')  # Redirecione para uma página de sucesso
+
     # Se não for um POST, renderize o formulário novamente
-    return render(request, 'salvar_avaliacao.html')  # Renderize o formulário novamente em caso de erro
+    form = AvaliacaoForm()  # Ajuste conforme necessário para o seu formulário
+    return render(request, 'salvar_avaliacao.html', {'form': form})
+
+# @login_required
+# def salvar_avaliacao_colaborador(request):
+#     if request.method == 'POST':
+#         # Crie uma nova instância de Avaliacao
+#         avaliacao = Avaliacao(
+#             colaborador_avaliado_id=request.POST.get('colaborador_avaliado'),
+#             avaliador_id=request.POST.get('avaliador'),
+#             pontos_melhoria=request.POST.get('pontos_melhoria'),
+#             pdi=request.POST.get('pdi'),
+#             metas=request.POST.get('metas'),
+#             alinhamento_semestral=request.POST.get('alinhamento_semestral'),
+#             # Se você tiver um campo de data de avaliação, descomente a linha abaixo
+#             # data_avaliacao=request.POST.get('data_avaliacao'),
+#         )
+#         avaliacao.save()  # Salva a avaliação no banco de dados
+
+#         # Salvar as respostas
+#         perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
+#         for pergunta in perguntas:
+#             nota = request.POST.get(f'pergunta_{pergunta.id}')  # O nome do campo para a nota deve ser algo como 'pergunta_1', 'pergunta_2', etc.
+#             if nota:
+#                 Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=nota)
+
+#         return redirect('sucesso')  # Redirecione para uma página de sucesso
+#     # Se não for um POST, renderize o formulário novamente
+#     return render(request, 'salvar_avaliacao.html')  # Renderize o formulário novamente em caso de erro
 
 @login_required
 def salvar_avaliacao_lider(request, colaborador_id):
     if request.method == 'POST':
         # Crie uma nova instância de Avaliacao
         avaliacao = Avaliacao(
-            colaborador_avaliado_id=colaborador_id,  # O ID do colaborador a ser avaliado
-            avaliador_id=request.user.id,  # O ID do líder que está avaliando
+            colaborador_avaliado_id=request.POST.get('colaborador_avaliado'),
+            nome_completo=request.POST.get('nome_completo'),
+            data_admissao=request.POST.get('data_admissao'),
+            cargo_atual=request.POST.get('cargo_atual'),
+            area=request.POST.get('area'),
+            periodo_referencia=request.POST.get('periodo_referencia'),
+            data_avaliacao=request.POST.get('data_avaliacao'),
+            competencias=request.POST.get('competencias'),
+            compromissos=request.POST.get('compromissos'),
+            integracao=request.POST.get('integracao'),
+            caracteristicas=request.POST.get('caracteristicas'),
             pontos_melhoria=request.POST.get('pontos_melhoria'),
             pdi=request.POST.get('pdi'),
             metas=request.POST.get('metas'),
             alinhamento_semestral=request.POST.get('alinhamento_semestral'),
-            # Se você tiver um campo de data de avaliação, descomente a linha abaixo
-            # data_avaliacao=request.POST.get('data_avaliacao'),
+            comentarios=request.POST.get('comentarios'),
         )
         avaliacao.save()  # Salva a avaliação no banco de dados
 
@@ -203,18 +318,21 @@ def salvar_avaliacao_lider(request, colaborador_id):
         perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
         for pergunta in perguntas:
             nota = request.POST.get(f'pergunta_{pergunta.id}')  # O nome do campo para a nota deve ser algo como 'pergunta_1', 'pergunta_2', etc.
+            texto = request.POST.get(f'texto_{pergunta.id}', '')  # Se você também tiver um campo de texto para a resposta
             if nota:
-                Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=nota)
+                Resposta.objects.create(
+                    usuario=request.user,  # Supondo que o usuário logado está respondendo
+                    avaliacao=avaliacao,
+                    pergunta=pergunta,
+                    nota=int(nota),  # Certifique-se de converter para int
+                    texto=texto
+                )
 
         return redirect('sucesso')  # Redirecione para uma página de sucesso
 
-    # Se não for um POST, renderize o formulário para a avaliação
-    colaborador = Colaborador.objects.get(id=colaborador_id)  # Obtém o colaborador a ser avaliado
-    perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
-    return render(request, 'salvar_avaliacao.html', {
-        'colaborador': colaborador,
-        'perguntas': perguntas,
-    })
+    # Se não for um POST, renderize o formulário novamente
+    form = AvaliacaoForm()  # Ajuste conforme necessário para o seu formulário
+    return render(request, 'salvar_avaliacao.html', {'form': form})
 
 @login_required
 def avaliacao_detalhes(request, avaliacao_id):
@@ -308,38 +426,78 @@ def todas_avaliacoes_rh(request):
         'avaliacoes_por_departamento': avaliacoes_por_departamento,
     })
 
-@login_required
-def detalhes_avaliacao(request, avaliacao_id):
-    avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
-    avaliador_id = Pergunta.objects.all()
-    # Obter todas as perguntas e tópicos
-    perguntas = Pergunta.objects.all()
-    topicos = Pergunta.objects.all()
-    respostas_colaborador = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.colaborador_avaliado_id)
-    respostas_lider = Resposta.objects.filter(avaliacao=avaliacao, usuario=avaliacao.avaliador_id)
+# def detalhes_avaliacao(request, id):
+#     avaliacao = get_object_or_404(Avaliacao, id=id)
     
-    # Organizar respostas por tópico
-    respostas_por_topico = {topico.texto: {'colaborador': [], 'lider': [], 'media_colaborador': None, 'media_lider': None} for topico in topicos}
-    
-    # for resposta in respostas_colaborador:
-    #     respostas_por_topico[resposta.pergunta.topico.nome]['colaborador'].append(resposta)
-    
-    for resposta in respostas_lider:
-        respostas_por_topico[resposta.pergunta.topico.nome]['lider'].append(resposta)
-    
-    # Calcular médias por tópico
-    for topico, dados in respostas_por_topico.items():
-        dados['media_colaborador'] = calcular_media(dados['colaborador'])
-        dados['media_lider'] = calcular_media(dados['lider'])
+#     # Buscar todas as respostas associadas à avaliação
+#     respostas_queryset = Resposta.objects.filter(avaliacao=avaliacao)
+#     respostas_dict = {resposta.pergunta.id: resposta for resposta in respostas_queryset}
 
-    return render(request, 'detalhes_avaliacao.html', {
+#     topicos = Topico.objects.all()
+#     topicos_perguntas = {}
+#     for topico in topicos:
+#         perguntas = Pergunta.objects.filter(topico=topico)
+#         topicos_perguntas[topico] = perguntas
+
+#     medias_respostas = {}
+#     for topico, perguntas in topicos_perguntas.items():
+#         notas = [respostas_dict[pergunta.id].nota for pergunta in perguntas if pergunta.id in respostas_dict]
+#         if notas:
+#             medias_respostas[topico.id] = sum(notas) / len(notas)
+#         else:
+#             medias_respostas[topico.id] = None
+
+#     context = {
+#         'avaliacao': avaliacao,
+#         'respostas': respostas_dict,
+#         'topicos_perguntas': topicos_perguntas,
+#         'medias_respostas': medias_respostas,
+#     }
+    
+#     return render(request, 'detalhes_avaliacao.html', context)
+
+def detalhes_avaliacao(request, id):
+    # Retrieve the evaluation object
+    avaliacao = get_object_or_404(Avaliacao, id=id)
+    
+    # Retrieve all responses associated with the evaluation
+    respostas_queryset = AvaliacaoPerguntaResposta.objects.filter(avaliacao=avaliacao)
+    
+    # Create a dictionary to map question IDs to response objects
+    respostas_dict = {resposta.pergunta.id: resposta for resposta in respostas_queryset}
+    
+    # Retrieve all topics
+    topicos = Topico.objects.all()
+    
+    # Create a dictionary to map topics to their associated questions
+    topicos_perguntas = {}
+    for topico in topicos:
+        perguntas = Pergunta.objects.filter(topico=topico)
+        topicos_perguntas[topico] = perguntas
+
+    # Create a dictionary to map topics to the average of their responses
+    medias_respostas = {}
+    for topico, perguntas in topicos_perguntas.items():
+        # Collect the notes for each question in the topic
+        notas = [respostas_dict[pergunta.id].nota for pergunta in perguntas if pergunta.id in respostas_dict and respostas_dict[pergunta.id].nota is not None]
+        
+        # Calculate the average note for the topic if notes exist
+        if notas:
+            medias_respostas[topico.id] = sum(notas) / len(notas)
+        else:
+            medias_respostas[topico.id] = None
+
+    # Create the context dictionary for the template
+    context = {
         'avaliacao': avaliacao,
-        'respostas_por_topico': respostas_por_topico,
-        'avaliador_id': avaliador_id,
-        'avaliacao_lider': avaliacao_lider,
-        'perguntas': perguntas,
-        'respostas_colaborador': respostas_colaborador
-    })
+        'respostas': respostas_dict,
+        'topicos_perguntas': topicos_perguntas,
+        'medias_respostas': medias_respostas,
+    }
+    
+    # Render the template with the context data
+    return render(request, 'detalhes_avaliacao.html', context)
+
 
 def calcular_media_lider(notas):
     if notas:
@@ -440,13 +598,23 @@ def listar_colaboradores(request, departamento_id):
         'colaboradores': colaboradores,
     })
 
+@login_required
 def listar_avaliacoes_colaborador(request, colaborador_id):
     colaborador = get_object_or_404(Colaborador, id=colaborador_id)
     avaliacoes_recebidas = Avaliacao.objects.filter(colaborador_avaliado=colaborador)
+    
+    # Verificar se o usuário logado é um líder e se ele realizou avaliações sobre o colaborador
+    avaliacoes_lider = AvaliacaoLider.objects.filter(avaliador=request.user, colaborador_avaliado=colaborador)
+    print(avaliacoes_lider)
+    
+    # Verificar se o usuário logado é do RH
+    is_rh = request.user.is_rh
 
     context = {
         'colaborador': colaborador,
         'avaliacoes_recebidas': avaliacoes_recebidas,
+        'avaliacoes_lider': avaliacoes_lider if is_rh else [],  # Mostra as avaliações do líder apenas se o usuário for do RH
+        'is_rh': is_rh,
     }
     return render(request, 'listar_avaliacoes_colaborador.html', context)
 
@@ -470,9 +638,65 @@ def listar_avaliacoes_lider(request, colaborador_id):
         colaborador_avaliado=colaborador,
         avaliador=lider
     )
-    
     return render(request, 'listar_avaliacoes_lider.html', {
         'colaborador': colaborador,
         'avaliacoes_lider': avaliacoes_lider
     })
+
+def criar_avaliacao_e_respostas(colaborador_id, nome_completo, respostas):
+    # Cria uma nova avaliação
+    avaliacao = Avaliacao.objects.create(
+        colaborador_avaliado_id=colaborador_id,
+        nome_completo=nome_completo,
+        data_admissao=date.today(),
+        cargo_atual='Cargo Atual Exemplo',
+        area='Área Exemplo',
+        periodo_referencia='Período Exemplo',
+        data_avaliacao=date.today(),
+        competencias='Competências Exemplo',
+        compromissos='Compromissos Exemplo',
+        integracao='Integração Exemplo',
+        caracteristicas='Características Exemplo',
+        pontos_melhoria='Pontos de Melhoria Exemplo',
+        pdi='PDI Exemplo',
+        metas='Metas Exemplo',
+        alinhamento_semestral='Alinhamento Semestral Exemplo',
+        comentarios='Comentários Adicionais Exemplo'
+    )
+
+    # Adiciona todas as perguntas à avaliação e preenche as respostas fornecidas
+    perguntas = Pergunta.objects.all()
+    for pergunta in perguntas:
+        resposta_data = respostas.get(str(pergunta.id), {})
+        AvaliacaoPerguntaResposta.objects.create(
+            avaliacao=avaliacao,
+            pergunta=pergunta,
+            nota=resposta_data.get('nota', None),
+            texto=resposta_data.get('texto', '')
+        )
+
+    return avaliacao
+
+# def criar_avaliacao_lider_e_respostas(colaborador_avaliado_id, avaliador_id, respostas):
+#     # Cria uma nova avaliação do líder
+#     avaliacao_lider = AvaliacaoLider.objects.create(
+#         colaborador_avaliado_id=colaborador_avaliado_id,
+#         avaliador_id=avaliador_id,
+#         pontos_melhoria='Pontos de Melhoria Exemplo',
+#         pdi='PDI Exemplo',
+#         metas='Metas Exemplo',
+#         alinhamento_semestral='Alinhamento Semestral Exemplo',
+#         comentarios='Comentários Adicionais Exemplo'
+#     )
+
+#     # Adiciona respostas do líder à avaliação
+#     for pergunta_id, resposta_data in respostas.items():
+#         pergunta = Pergunta.objects.get(id=pergunta_id)
+#         RespostaLider.objects.create(
+#             colaborador_id=avaliador_id,  # Assumindo que o líder está respondendo
+#             avaliacao=avaliacao_lider,
+#             pergunta=pergunta,
+#             nota=resposta_data.get('nota', 0),
+#             texto=resposta_data.get('texto', '')
+#         )
 

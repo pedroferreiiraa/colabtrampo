@@ -23,7 +23,7 @@ urlpatterns = [
     path('colaboradores/<int:colaborador_id>/avaliacoes/', views.listar_avaliacoes_colaborador, name='listar_avaliacoes_colaborador'),
     path('colaboradores/<int:colaborador_id>/avaliacoes_lider/', views.listar_avaliacoes_lider, name='listar_avaliacoes_lider'),
     
-    path('avaliacoes/<int:avaliacao_id>/', views.detalhes_avaliacao, name='detalhes_avaliacao'),
+    path('avaliacoes/<int:id>/', views.detalhes_avaliacao, name='detalhes_avaliacao'),
 
     path('realizar_avaliacao_colaborador/', views.realizar_avaliacao_colaborador, name='realizar_avaliacao_colaborador'),
     #path('realizar_avaliacao_colaborador/<int:colaborador_id>/', realizar_avaliacao_colaborador, name='realizar_avaliacao_colaborador'),

@@ -1,124 +1,17 @@
-{% extends "base.html" %}
-
-{% block content%}
-    <style>
-        body {
-            padding-top: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .form-header {
-            margin-bottom: 20px;
-        }
-        .form-actions {
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-
-
-        <header class="text-center mb-4">
-            <h1>Avaliação de desempenho de colaboradores</h1>
-        </header>
+<form method="post" action="{% url 'realizar_avaliacao_colaborador' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
     
-
-            <div class="container border">
-                <h5 class="text-center mt-1">Informações do colaborador</h5>
-                <div class="row mb-1">
-                <div class="col">
-                Nome completo: {{ colaborador.nome }}
-                </div>
-                <div class="col">
-                    Data de admissão: {{ colaborador.data_admissao|date:"d/m/Y" }}
-                </div>
-                </div>
-                <div class="row mb-1">
-                    <div class="col">
-                    Cargo atual: {{ colaborador.funcao }}
-                    </div>
-                    <div class="col">
-                        Data cargo? Verificar possivel mudanças depois
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="container border mt-2">
-
-                <h5 class="text-center mt-1">Período de Avaliação</h5>
-
-                <div class="row mb-1">
-                    <div class="col">
-                   Período referencia: 
-                    </div>
-
-                    <div class="col">
-                        Data inicial:
-                        <input type="date" name="data_inicial" id="data_inicial">
-                    </div>
-                    <div class="col">
-                      Data final:
-                      <input type="date" name="data_inicial" id="data_inicial">
-                    </div>
-                    <div class="col">
-                      Data avaliação:
-                      <input type="date" name="data_inicial" id="data_inicial">
-                    </div>
-                </div>
-            </div>
-
-            <div class="container border mt-2">
-
-                <h5 class="text-center mt-1">Instruções</h5>
-                <p>Preenchimento: 			</br>	
-                    Avaliado: Preencha a coluna "AUTO AVALIAÇÃO" com notas de 1 a 10 para cada indicador; 	</br>							
-                    Leia atentamente a descrição de cada indicador e avalie o seu desempenho.						</br>
-                </p>
-            </div>
-
-            <div class="container border mt-2">
-                <div class="row">
-                    <h5 class="text-center mt-1">Níveis de escala:</h5>
-                    <div class="col">
-                    </br>
-                        NOTAS </br>
-                        1, 2, 3 e 4.</br>
-                        5 e 6.</br>
-                        7 e 8.</br>
-                        9 e 10.</br>
-                    </div>
-                    <div class="col">
-                        </br>
-                        NÍVEL</br>
-                        Insatisfatório</br>
-                        Regular</br>
-                        Bom</br>
-                        Excelente</br>
-                    </div>
-                </div>
-            </div>
-
-        <form class="mt-4" method="post" action="{% url 'realizar_avaliacao_colaborador' %}">
-            {% csrf_token %}
-        
-
-            <!-- Renderiza o formulário com estilo -->
+    <!-- Renderiza os tópicos e perguntas -->
+    <!-- {% for topico, perguntas in topicos_perguntas.items %}
+        <h3>{{ topico.nome }}</h3>
+        {% for pergunta in perguntas %}
             <div class="mb-3">
-                {{ form.as_p }}
+                <label for="id_pergunta_{{ pergunta.id }}_nota">{{ pergunta.texto }}</label>
+                <input type="number" name="pergunta_{{ pergunta.id }}_nota" id="id_pergunta_{{ pergunta.id }}_nota" class="form-control" min="0" max="10">
             </div>
+        {% endfor %}
+    {% endfor %} -->
 
-            <div class="form-actions text-center">
-                <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Inclua o JS do Bootstrap e dependências -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
-</body>
-{% endblock content %}
+    <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+</form>

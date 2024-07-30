@@ -11,8 +11,9 @@ class Colaborador(AbstractUser):
     is_coordenador = models.BooleanField(default=False)
     is_rh = models.BooleanField(default=False)
     turno = models.ForeignKey('Turno', on_delete=models.CASCADE, null=True, blank=True)
-    data_admissao = models.DateTimeField(blank=True, null=True)
-
+    data_admissao = models.DateField(blank=True, null=True)  # Altere para DateField para consistência com o modelo Avaliacao
+    cargo_atual = models.CharField(max_length=100, blank=True, null=True)  # Adicione o campo cargo_atual aqui
+    area = models.CharField(max_length=100, blank=True, null=True)  # Adicione o campo area aqui
     groups = models.ManyToManyField(
         Group,
         related_name='colaboradores',
@@ -73,6 +74,7 @@ class Topico(models.Model):
 class Pergunta(models.Model):
     topico = models.ForeignKey(Topico, on_delete=models.CASCADE, related_name='perguntas')
     texto = models.CharField(max_length=255)
+    competencias = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = 'pergunta'
@@ -83,13 +85,8 @@ class Pergunta(models.Model):
         return self.texto  
         
 class Avaliacao(models.Model):
-    #avaliador_id = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliador_id', blank=True, null=True)
-    colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas', default='')
-    nome_completo = models.CharField(max_length=100, default='')
-    data_admissao = models.DateField(default=date.today)
-    cargo_atual = models.CharField(max_length=100, default='')
-    area = models.CharField(max_length=100, default='')
-    periodo_referencia = models.CharField(max_length=100, default='')
+    colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas')
+    avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_realizadas', blank=True, null=True)  # Assumindo que você quer registrar quem fez a avaliação
     data_avaliacao = models.DateField(default=date.today)
     competencias = models.CharField(max_length=100)
     compromissos = models.CharField(max_length=100)
@@ -113,7 +110,7 @@ class Avaliacao(models.Model):
         return respostas
     
     def __str__(self):
-        return f"Avaliação de {self.nome_completo}"
+        return f"Avaliação de {self.colaborador_avaliado.nome}"
     
 class Resposta(models.Model):
     usuario = models.ForeignKey(Colaborador, on_delete=models.CASCADE)  # Adiciona o campo usuário
@@ -129,14 +126,18 @@ class Resposta(models.Model):
    
 
 class AvaliacaoLider(models.Model):
-    colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_lideradas')
-    avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_lider_realizadas')
-    data_criacao = models.DateTimeField(auto_now_add=True)
-    pontos_melhoria = models.TextField(null=True, blank=True)
-    pdi = models.TextField(null=True, blank=True)
-    metas = models.TextField(null=True, blank=True)
-    alinhamento_semestral = models.TextField(null=True, blank=True)
-    comentarios = models.TextField(null=True, blank=True)
+    colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas')
+    avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_realizadas', blank=True, null=True)  # Assumindo que você quer registrar quem fez a avaliação
+    data_avaliacao = models.DateField(default=date.today)
+    competencias = models.CharField(max_length=100)
+    compromissos = models.CharField(max_length=100)
+    integracao = models.CharField(max_length=100)
+    caracteristicas = models.CharField(max_length=100)
+    pontos_melhoria = models.TextField(blank=True)
+    pdi = models.TextField(blank=True)
+    metas = models.CharField(max_length=100)
+    alinhamento_semestral = models.CharField(max_length=100)
+    comentarios = models.TextField(blank=True)
 
     class Meta:
         db_table = 'avaliacao_lider'
@@ -163,3 +164,25 @@ class RespostaLider(models.Model):
         db_table = 'resposta_lider'
         verbose_name = "Resposta do Líder"
         verbose_name_plural = "Respostas dos Líderes"
+
+class AvaliacaoPerguntaResposta(models.Model):
+    avaliacao = models.ForeignKey(Avaliacao, on_delete=models.CASCADE)
+    pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
+    nota = models.IntegerField(blank=True, null=True)
+    texto = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'avaliacao_pergunta_resposta'
+        verbose_name = "Avaliação Pergunta Resposta"
+        verbose_name_plural = "Avaliações Perguntas Respostas"
+
+class AvaliacaoLiderPerguntaResposta(models.Model):
+    avaliacao = models.ForeignKey(Avaliacao, on_delete=models.CASCADE)
+    pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
+    nota = models.IntegerField(blank=True, null=True)
+    texto = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'avaliacao_lider_pergunta_resposta'
+        verbose_name = 'Avaliação Líder Pergunta Resposta'
+        verbose_name_plural = 'Avaliações Líder Pergunta Resposta'

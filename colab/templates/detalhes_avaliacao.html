@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block content %}
 <div class="container mt-4">
@@ -8,12 +9,11 @@
             Avaliação realizada em {{ avaliacao.data_avaliacao }}
         </div>
         <div class="card-body">
-            <p><strong>AVALIACAO LIDER:</strong> {{ avaliacao_lider }}</p>
             <p><strong>Colaborador Avaliado:</strong> {{ avaliacao.colaborador_avaliado }}</p>
             <p><strong>Nome Completo:</strong> {{ avaliacao.nome_completo }}</p>
             <p><strong>Cargo Atual:</strong> {{ avaliacao.cargo_atual }}</p>
             <p><strong>Área:</strong> {{ avaliacao.area }}</p>
-            <p><strong>Avaliador:</strong> {{ avaliacao.avaliador_id}}</p>
+            <p><strong>Avaliador:</strong> {{ avaliacao.avaliador }}</p>
             <p><strong>Período de Referência:</strong> {{ avaliacao.periodo_referencia }}</p>
             <p><strong>Competências:</strong> {{ avaliacao.competencias }}</p>
             <p><strong>Compromissos:</strong> {{ avaliacao.compromissos }}</p>
@@ -26,36 +26,37 @@
             <p><strong>Comentários:</strong> {{ avaliacao.comentarios }}</p>
         </div>
     </div>
-    
+
     <h3>Respostas</h3>
-    <ul class="list-group mb-4">
-        {% for resposta in respostas %}
-        <li class="list-group-item">
-            <strong>Pergunta:</strong> {{ resposta.pergunta.texto }}<br>
-            <strong>Resposta:</strong> {{ resposta.texto }}<br>
-            <strong>Nota:</strong> {{ resposta.nota }}
-        </li>
-        {% empty %}
-        <li class="list-group-item">Nenhuma resposta encontrada.</li>
-        {% endfor %}
-    </ul>
+    {% for topico, perguntas in topicos_perguntas.items %}
+        <div class="card mb-4">
+            <div class="card-header">
+                {{ topico.nome }}
+            </div>
+            <div class="card-body">
+                <ul class="list-group mb-4">
+                    {% for pergunta in perguntas %}
+                        <li class="list-group-item">
+                            <strong>Pergunta:</strong> {{ pergunta.texto }}<br>
+                            <strong>Resposta:</strong>
+                            {% with resposta=respostas|get_item:pergunta.id %}
+                                {% if resposta %}
+                                    Nota: {{ resposta.nota|default:"N/A" }}<br>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            {% endwith %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                <p><strong>Média das Respostas:</strong> {{ medias_respostas|get_item:topico.id|default:"N/A" }}</p>
+            </div>
+        </div>
+    {% endfor %}
     
-    {% if avaliacoes_lider %}
-    <h3>Avaliações do Líder</h3>
-    <ul class="list-group mb-4">
-        {% for avaliacao_lider in avaliacoes_lider %}
-        <li class="list-group-item">
-            <strong>Avaliação realizada em:</strong> {{ avaliacao_lider.data_criacao }}<br>
-            <strong>Pontos de Melhoria:</strong> {{ avaliacao_lider.pontos_melhoria }}<br>
-            <strong>PDI:</strong> {{ avaliacao_lider.pdi }}<br>
-            <strong>Metas:</strong> {{ avaliacao_lider.metas }}<br>
-            <strong>Alinhamento Semestral:</strong> {{ avaliacao_lider.alinhamento_semestral }}<br>
-            <strong>Comentários:</strong> {{ avaliacao_lider.comentarios }}
-        </li>
-        {% empty %}
-        <li class="list-group-item">Nenhuma avaliação do líder encontrada.</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+    <!-- Debugging output -->
+    <h4>Debugging Output</h4>
+    <pre>Respostas: {{ respostas|dictsort:"0" }}</pre>
+    <pre>Medias Respostas: {{ medias_respostas }}</pre>
 </div>
 {% endblock %}
