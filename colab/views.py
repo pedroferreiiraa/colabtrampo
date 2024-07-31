@@ -85,9 +85,13 @@ def home_view(request):
 #     #topicos_perguntas = obter_topicos_e_perguntas()  # Crie uma função para obter tópicos e perguntas
 #     return render(request, 'realizar_avaliacao_colaborador.html', {'form': form})
 
+@login_required
 def realizar_avaliacao_colaborador(request):
     perguntas = Pergunta.objects.all()
+    informacoes = Colaborador.objects.all()
     topicos_perguntas = {}
+    
+    # Agrupando perguntas por tópico
     for pergunta in perguntas:
         topico = pergunta.topico
         if topico not in topicos_perguntas:
@@ -101,29 +105,42 @@ def realizar_avaliacao_colaborador(request):
         
         if form.is_valid():
             avaliacao = form.save(commit=False)
-            avaliacao.colaborador_avaliado = request.user
+            colaborador_avaliado = request.POST.get('colaborador_avaliado')  # Ajuste conforme necessário
             avaliacao.save()
             
+            # Salva as respostas relacionadas
             for pergunta in perguntas:
+                # Obtém a nota do formulário
                 nota = form.cleaned_data.get(f'pergunta_{pergunta.id}_nota')
-                texto = form.cleaned_data.get(f'pergunta_{pergunta.id}_texto')
-                if nota is not None or texto:
-                    AvaliacaoPerguntaResposta.objects.create(
-                        avaliacao=avaliacao,
-                        pergunta=pergunta,
-                        nota=nota,
-                        texto=texto
-                    )
+                
+                if nota is not None:  # Verifica se a nota foi fornecida
+                    try:
+                        Resposta.objects.create(
+                            avaliacao=avaliacao,
+                            pergunta=pergunta,
+                            nota=nota,
+                            usuario=request.user
+                        )
+                    except Exception as e:
+                        print(f"Erro ao salvar resposta para a pergunta {pergunta.id}: {e}")
             
             return redirect('sucesso')
+        else:
+            print('Formulário não é válido:', form.errors)  # Exibe erros do formulário para depuração
     else:
+        print('Formulário não foi enviado')
         form = AvaliacaoForm(user=request.user)
     
     return render(request, 'realizar_avaliacao_colaborador.html', {
         'form': form,
-        'topicos_perguntas': topicos_perguntas,
+        'perguntas': perguntas,
         'colaborador': colaborador,
+        'topicos_perguntas': topicos_perguntas,
+        'avaliadores': informacoes.filter(is_lider=True),
+        'avaliacao': Avaliacao.objects.all(),
     })
+
+
 # def realizar_avaliacao_colaborador(request):
 #     perguntas = Pergunta.objects.all()
 #     informacoes = Colaborador.objects.all()
@@ -137,15 +154,15 @@ def realizar_avaliacao_colaborador(request):
 #             avaliacao.colaborador_avaliado = request.user
 #             avaliacao.save()
             
-#             for pergunta in perguntas:
-#                 resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
-#                 if resposta is not None:
-#                     Resposta.objects.create(
-#                         avaliacao=avaliacao,
-#                         pergunta=pergunta,
-#                         nota=resposta,
-#                         usuario=request.user
-#                     )
+            # for pergunta in perguntas:
+            #     resposta = form.cleaned_data.get(f'pergunta_{pergunta.id}')
+            #     if resposta is not None:
+            #         Resposta.objects.create(
+            #             avaliacao=avaliacao,
+            #             pergunta=pergunta,
+            #             nota=resposta,
+            #             usuario=request.user
+            #         )
             
 #             return redirect('sucesso')
 #     else:
@@ -210,6 +227,17 @@ def realizar_avaliacao_lider(request, colaborador_id):
             avaliacao.avaliador = avaliador
             avaliacao.save()
 
+            # Salvar as respostas
+            for pergunta in Pergunta.objects.all():
+                nota = form.cleaned_data.get(f'pergunta_{pergunta.id}')
+                if nota is not None:
+                    RespostaLider.objects.create(
+                        colaborador=colaborador_avaliado,
+                        avaliacao=avaliacao,
+                        pergunta=pergunta,
+                        nota=nota
+                    )
+
             return redirect('sucesso')
     else:
         form = AvaliacaoLiderForm()
@@ -225,70 +253,44 @@ def salvar_avaliacao_colaborador(request):
         # Crie uma nova instância de Avaliacao
         avaliacao = Avaliacao(
             colaborador_avaliado_id=request.POST.get('colaborador_avaliado'),
-            nome_completo=request.POST.get('nome_completo'),
-            data_admissao=request.POST.get('data_admissao'),
-            cargo_atual=request.POST.get('cargo_atual'),
-            area=request.POST.get('area'),
-            periodo_referencia=request.POST.get('periodo_referencia'),
+            avaliador=request.POST.get('avaliador'),
             data_avaliacao=request.POST.get('data_avaliacao'),
-            competencias=request.POST.get('competencias'),
-            compromissos=request.POST.get('compromissos'),
-            integracao=request.POST.get('integracao'),
-            caracteristicas=request.POST.get('caracteristicas'),
             pontos_melhoria=request.POST.get('pontos_melhoria'),
             pdi=request.POST.get('pdi'),
             metas=request.POST.get('metas'),
-            alinhamento_semestral=request.POST.get('alinhamento_semestral'),
-            comentarios=request.POST.get('comentarios'),
         )
-        avaliacao.save()  # Salva a avaliação no banco de dados
+        
+        try:
+            avaliacao.save()  # Salva a avaliação no banco de dados
 
-        # Salvar as respostas
-        perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
-        for pergunta in perguntas:
-            nota = request.POST.get(f'pergunta_{pergunta.id}')  # O nome do campo para a nota deve ser algo como 'pergunta_1', 'pergunta_2', etc.
-            texto = request.POST.get(f'texto_{pergunta.id}', '')  # Se você também tiver um campo de texto para a resposta
-            if nota:
-                Resposta.objects.create(
-                    usuario=request.user,  # Supondo que o usuário logado está respondendo
-                    avaliacao=avaliacao,
-                    pergunta=pergunta,
-                    nota=int(nota),  # Certifique-se de converter para int
-                    texto=texto
-                )
+            # Salvar as respostas
+            perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
+            for pergunta in perguntas:
+                nota = request.POST.get(f'pergunta_{pergunta.id}')  # O nome do campo para a nota deve ser algo como 'pergunta_1', 'pergunta_2', etc.
+                texto = request.POST.get(f'texto_{pergunta.id}', '')  # Se você também tiver um campo de texto para a resposta
+                
+                if nota:  # Verifica se a nota foi fornecida
+                    try:
+                        Resposta.objects.create(
+                            usuario=request.user,  # Supondo que o usuário logado está respondendo
+                            avaliacao=avaliacao,
+                            pergunta=pergunta,
+                            nota=int(nota),  # Certifique-se de converter para int
+                            texto=texto
+                        )
+                    except ValueError:
+                        # Log ou trate o erro de conversão
+                        print(f"Erro ao converter nota para a pergunta {pergunta.id}: {nota}")
 
-        return redirect('sucesso')  # Redirecione para uma página de sucesso
+            return redirect('sucesso')  # Redirecione para uma página de sucesso
+
+        except Exception as e:
+            # Log ou trate o erro ao salvar a avaliação
+            print(f"Erro ao salvar a avaliação: {e}")
 
     # Se não for um POST, renderize o formulário novamente
     form = AvaliacaoForm()  # Ajuste conforme necessário para o seu formulário
-    return render(request, 'salvar_avaliacao.html', {'form': form})
-
-# @login_required
-# def salvar_avaliacao_colaborador(request):
-#     if request.method == 'POST':
-#         # Crie uma nova instância de Avaliacao
-#         avaliacao = Avaliacao(
-#             colaborador_avaliado_id=request.POST.get('colaborador_avaliado'),
-#             avaliador_id=request.POST.get('avaliador'),
-#             pontos_melhoria=request.POST.get('pontos_melhoria'),
-#             pdi=request.POST.get('pdi'),
-#             metas=request.POST.get('metas'),
-#             alinhamento_semestral=request.POST.get('alinhamento_semestral'),
-#             # Se você tiver um campo de data de avaliação, descomente a linha abaixo
-#             # data_avaliacao=request.POST.get('data_avaliacao'),
-#         )
-#         avaliacao.save()  # Salva a avaliação no banco de dados
-
-#         # Salvar as respostas
-#         perguntas = Pergunta.objects.all()  # Obtém todas as perguntas
-#         for pergunta in perguntas:
-#             nota = request.POST.get(f'pergunta_{pergunta.id}')  # O nome do campo para a nota deve ser algo como 'pergunta_1', 'pergunta_2', etc.
-#             if nota:
-#                 Resposta.objects.create(avaliacao=avaliacao, pergunta=pergunta, nota=nota)
-
-#         return redirect('sucesso')  # Redirecione para uma página de sucesso
-#     # Se não for um POST, renderize o formulário novamente
-#     return render(request, 'salvar_avaliacao.html')  # Renderize o formulário novamente em caso de erro
+    return render(request, 'realizar_avaliacao_colaboador.html', {'form': form})
 
 @login_required
 def salvar_avaliacao_lider(request, colaborador_id):
@@ -600,24 +602,22 @@ def listar_colaboradores(request, departamento_id):
 
 @login_required
 def listar_avaliacoes_colaborador(request, colaborador_id):
+    # Obtém o colaborador com base no ID fornecido
     colaborador = get_object_or_404(Colaborador, id=colaborador_id)
+    
+    # Obtém as avaliações recebidas pelo colaborador
     avaliacoes_recebidas = Avaliacao.objects.filter(colaborador_avaliado=colaborador)
     
-    # Verificar se o usuário logado é um líder e se ele realizou avaliações sobre o colaborador
-    avaliacoes_lider = AvaliacaoLider.objects.filter(avaliador=request.user, colaborador_avaliado=colaborador)
-    print(avaliacoes_lider)
-    
-    # Verificar se o usuário logado é do RH
-    is_rh = request.user.is_rh
+    # Obtém as avaliações realizadas pelo líder sobre o colaborador
+    avaliacoes_lider = AvaliacaoLider.objects.filter(colaborador_avaliado=colaborador)
 
     context = {
         'colaborador': colaborador,
         'avaliacoes_recebidas': avaliacoes_recebidas,
-        'avaliacoes_lider': avaliacoes_lider if is_rh else [],  # Mostra as avaliações do líder apenas se o usuário for do RH
-        'is_rh': is_rh,
+        'avaliacoes_lider': avaliacoes_lider,
     }
+    
     return render(request, 'listar_avaliacoes_colaborador.html', context)
-
 
 # def detalhes_avaliacao(request, avaliacao_id):
 #     avaliacao = get_object_or_404(Avaliacao, id=avaliacao_id)
@@ -643,39 +643,39 @@ def listar_avaliacoes_lider(request, colaborador_id):
         'avaliacoes_lider': avaliacoes_lider
     })
 
-def criar_avaliacao_e_respostas(colaborador_id, nome_completo, respostas):
-    # Cria uma nova avaliação
-    avaliacao = Avaliacao.objects.create(
-        colaborador_avaliado_id=colaborador_id,
-        nome_completo=nome_completo,
-        data_admissao=date.today(),
-        cargo_atual='Cargo Atual Exemplo',
-        area='Área Exemplo',
-        periodo_referencia='Período Exemplo',
-        data_avaliacao=date.today(),
-        competencias='Competências Exemplo',
-        compromissos='Compromissos Exemplo',
-        integracao='Integração Exemplo',
-        caracteristicas='Características Exemplo',
-        pontos_melhoria='Pontos de Melhoria Exemplo',
-        pdi='PDI Exemplo',
-        metas='Metas Exemplo',
-        alinhamento_semestral='Alinhamento Semestral Exemplo',
-        comentarios='Comentários Adicionais Exemplo'
-    )
+# def criar_avaliacao_e_respostas(colaborador_id, nome_completo, respostas):
+#     # Cria uma nova avaliação
+#     avaliacao = Avaliacao.objects.create(
+#         colaborador_avaliado_id=colaborador_id,
+#         nome_completo=nome_completo,
+#         data_admissao=date.today(),
+#         cargo_atual='Cargo Atual Exemplo',
+#         area='Área Exemplo',
+#         periodo_referencia='Período Exemplo',
+#         data_avaliacao=date.today(),
+#         competencias='Competências Exemplo',
+#         compromissos='Compromissos Exemplo',
+#         integracao='Integração Exemplo',
+#         caracteristicas='Características Exemplo',
+#         pontos_melhoria='Pontos de Melhoria Exemplo',
+#         pdi='PDI Exemplo',
+#         metas='Metas Exemplo',
+#         alinhamento_semestral='Alinhamento Semestral Exemplo',
+#         comentarios='Comentários Adicionais Exemplo'
+#     )
 
-    # Adiciona todas as perguntas à avaliação e preenche as respostas fornecidas
-    perguntas = Pergunta.objects.all()
-    for pergunta in perguntas:
-        resposta_data = respostas.get(str(pergunta.id), {})
-        AvaliacaoPerguntaResposta.objects.create(
-            avaliacao=avaliacao,
-            pergunta=pergunta,
-            nota=resposta_data.get('nota', None),
-            texto=resposta_data.get('texto', '')
-        )
+#     # Adiciona todas as perguntas à avaliação e preenche as respostas fornecidas
+#     perguntas = Pergunta.objects.all()
+#     for pergunta in perguntas:
+#         resposta_data = respostas.get(str(pergunta.id), {})
+#         AvaliacaoPerguntaResposta.objects.create(
+#             avaliacao=avaliacao,
+#             pergunta=pergunta,
+#             nota=resposta_data.get('nota', None),
+#             texto=resposta_data.get('texto', '')
+#         )
 
-    return avaliacao
+#     return avaliacao
 
 # def criar_avaliacao_lider_e_respostas(colaborador_avaliado_id, avaliador_id, respostas):
 #     # Cria uma nova avaliação do líder

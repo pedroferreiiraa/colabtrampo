@@ -1,17 +1,87 @@
-<form method="post" action="{% url 'realizar_avaliacao_colaborador' %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    
-    <!-- Renderiza os tópicos e perguntas -->
-    <!-- {% for topico, perguntas in topicos_perguntas.items %}
-        <h3>{{ topico.nome }}</h3>
-        {% for pergunta in perguntas %}
-            <div class="mb-3">
-                <label for="id_pergunta_{{ pergunta.id }}_nota">{{ pergunta.texto }}</label>
-                <input type="number" name="pergunta_{{ pergunta.id }}_nota" id="id_pergunta_{{ pergunta.id }}_nota" class="form-control" min="0" max="10">
-            </div>
-        {% endfor %}
-    {% endfor %} -->
+{% extends "base.html" %}
 
-    <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
-</form>
+{% load custom_filters %}
+
+{% block content %}
+    <style>
+        .form{
+            width: 300px; /* Ajuste o valor conforme necessário */
+        }
+    </style>
+
+    
+
+
+    <div class="container">
+        <header class="text-center mb-4">
+            <h1>Avaliação de desempenho de colaboradores</h1>
+        </header>
+
+        <form class="mt-4 fs-3" method="post" action="{% url 'realizar_avaliacao_colaborador' %}">
+            {% csrf_token %}
+
+            <!-- Campos do colaborador avaliado e avaliador -->
+            <div class="mb-3">
+                <div class="form fs-3">
+                    {{ form.colaborador_avaliado.label_tag }}
+                    {{ form.colaborador_avaliado }}
+                </div>
+            </div>
+            <!-- <div class="mb-3">
+                {{ form.avaliador.label_tag }}
+                {{ form.avaliador }}
+            </div> -->
+
+            <!-- Campo data_avaliacao -->
+            <div class="mb-3 form">
+                {{ form.data_avaliacao.label_tag }}  <!-- Rótulo do campo -->
+                {{ form.data_avaliacao }}  <!-- Campo para data -->
+                {% if form.data_avaliacao.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.data_avaliacao.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <!-- Exibe as perguntas agrupadas por tópico -->
+            <div >
+                <h5 class="text-center fs-1">Avaliação</h5>
+                {% for topico, perguntas in form.topicos_perguntas.items %}
+                    <h6 class="mt-4 fs-1 color-primary"> -  {{ topico }}</h6>  <!-- Exibe o nome do tópico -->
+                    {% for pergunta in perguntas %}
+                        <div class="mb-3">
+                            <div>
+                                <p>{{ pergunta.texto }}</p>
+                                <input  type="number" name="pergunta_{{ pergunta.id }}_nota" min="0" max="10" class="" width="20px" required placeholder="">  <!-- Campo para nota -->
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+
+            <!-- Campos de Pontos de Melhoria, PDI, Metas e Alinhamento Semestral -->
+            <div class="mb-3">
+                <h5 class="fs-3">Pontos de Melhoria - (Para preenchimento juntamente com o lider):</h5>
+                {{ form.pontos_melhoria }}
+            </div>
+            <div class="mb-3">
+                <h5 class="fs-3">PDI - Plano de Desenvolvimento Individual - (Para preenchimento juntamente com o lider):</h5>
+                {{ form.pdi }}
+            </div>
+            <div class="mb-3">
+                <h5 class="fs-3">Metas - (Para preenchimento juntamente com o lider): </h5>
+                {{ form.metas }}
+            </div>
+
+            <div class="form-actions text-center mb-3">
+                <button type="submit" class="btn fs-2 btn-primary">Salvar Avaliação</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Inclua o JS do Bootstrap e dependências -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+{% endblock content %}

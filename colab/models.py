@@ -88,15 +88,10 @@ class Avaliacao(models.Model):
     colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas')
     avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_realizadas', blank=True, null=True)  # Assumindo que você quer registrar quem fez a avaliação
     data_avaliacao = models.DateField(default=date.today)
-    competencias = models.CharField(max_length=100)
-    compromissos = models.CharField(max_length=100)
-    integracao = models.CharField(max_length=100)
-    caracteristicas = models.CharField(max_length=100)
     pontos_melhoria = models.TextField(blank=True)
     pdi = models.TextField(blank=True)
     metas = models.CharField(max_length=100)
-    alinhamento_semestral = models.CharField(max_length=100)
-    comentarios = models.TextField(blank=True)
+
 
     class Meta:
         db_table = 'avaliacao'
@@ -117,7 +112,7 @@ class Resposta(models.Model):
     avaliacao = models.ForeignKey(Avaliacao, on_delete=models.CASCADE, related_name='respostas')
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
     nota = models.IntegerField()
-    texto = models.TextField(blank=True, null=True)
+
 
     class Meta:
         db_table = 'resposta'
@@ -126,18 +121,18 @@ class Resposta(models.Model):
    
 
 class AvaliacaoLider(models.Model):
-    colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas')
-    avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_realizadas', blank=True, null=True)  # Assumindo que você quer registrar quem fez a avaliação
+    colaborador_avaliado = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_recebidas_lider')
+    avaliador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name='avaliacoes_realizadas_lider', blank=True, null=True)  # Assumindo que você quer registrar quem fez a avaliação
     data_avaliacao = models.DateField(default=date.today)
-    competencias = models.CharField(max_length=100)
-    compromissos = models.CharField(max_length=100)
-    integracao = models.CharField(max_length=100)
-    caracteristicas = models.CharField(max_length=100)
-    pontos_melhoria = models.TextField(blank=True)
-    pdi = models.TextField(blank=True)
-    metas = models.CharField(max_length=100)
-    alinhamento_semestral = models.CharField(max_length=100)
-    comentarios = models.TextField(blank=True)
+    competencias = models.CharField(max_length=100, null=True, blank=True)
+    compromissos = models.CharField(max_length=100, null=True, blank=True)
+    integracao = models.CharField(max_length=100, null=True, blank=True)
+    caracteristicas = models.CharField(max_length=100, null=True, blank=True)
+    pontos_melhoria = models.TextField(blank=True, null=True)
+    pdi = models.TextField(blank=True, null=True)
+    metas = models.CharField(max_length=100, null=True, blank=True)
+    alinhamento_semestral = models.CharField(max_length=100, null=True, blank=True)
+    comentarios = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'avaliacao_lider'
@@ -175,14 +170,3 @@ class AvaliacaoPerguntaResposta(models.Model):
         db_table = 'avaliacao_pergunta_resposta'
         verbose_name = "Avaliação Pergunta Resposta"
         verbose_name_plural = "Avaliações Perguntas Respostas"
-
-class AvaliacaoLiderPerguntaResposta(models.Model):
-    avaliacao = models.ForeignKey(Avaliacao, on_delete=models.CASCADE)
-    pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
-    nota = models.IntegerField(blank=True, null=True)
-    texto = models.TextField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'avaliacao_lider_pergunta_resposta'
-        verbose_name = 'Avaliação Líder Pergunta Resposta'
-        verbose_name_plural = 'Avaliações Líder Pergunta Resposta'

@@ -21,40 +21,26 @@ class ColaboradorForm(UserCreationForm):
             'password2': 'Senha'
         }
 
-
 class AvaliacaoForm(forms.ModelForm):
     class Meta:
         model = Avaliacao
         fields = [
-            'colaborador_avaliado', 'data_avaliacao',
-            'competencias', 'compromissos', 'integracao', 'caracteristicas', 'pontos_melhoria', 
-            'pdi', 'metas', 'alinhamento_semestral', 'comentarios'
+            'colaborador_avaliado', 'avaliador', 'data_avaliacao', 
+            'pontos_melhoria', 'pdi', 'metas', 
         ]
         labels = {
             'colaborador_avaliado': 'Colaborador avaliado',
             'avaliador': 'Avaliador',
             'data_avaliacao': 'Data Avaliação',
-            'competencias': 'Competências/Habilidades',
-            'compromissos': 'Compromisso com Resultados',
-            'integracao': 'Integração Institucional',
-            'caracteristicas': 'Características Comportamentais',
             'pontos_melhoria': 'Pontos de Melhoria',
             'pdi': 'PDI - Plano de Desenvolvimento Individual',
             'metas': 'Metas',
-            'alinhamento_semestral': 'Alinhamento Semestral',
-            'comentarios': 'Comentários Adicionais' 
         }
         widgets = {
             'data_avaliacao': forms.DateInput(attrs={'type': 'date'}),
-            'competencias': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
-            'compromissos': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
-            'integracao': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
-            'caracteristicas': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
             'pontos_melhoria': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
             'pdi': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
             'metas': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
-            'alinhamento_semestral': forms.Textarea(attrs={'rows': 4, 'cols': 15}),
-            'comentarios': forms.Textarea(attrs={'rows': 4, 'cols': 15})
         }
 
     def __init__(self, *args, **kwargs):
@@ -62,18 +48,26 @@ class AvaliacaoForm(forms.ModelForm):
         super(AvaliacaoForm, self).__init__(*args, **kwargs)
 
         if self.user:
-            # Define o campo 'colaborador_avaliado' com o usuário atual
             self.fields['colaborador_avaliado'].initial = self.user
+            self.fields['avaliador'].initial = self.user
 
+        # Adiciona atributos de estilo a todos os campos
         for field_name in self.fields:
             self.fields[field_name].widget.attrs.update({
                 'class': 'form-control',
                 'style': 'border: 1px solid #ced4da; border-radius: .25rem; padding: .375rem .75rem; display: block'
             })
         
-        # Adiciona perguntas dinamicamente
+        # Agrupando perguntas por tópico
         perguntas = Pergunta.objects.all().select_related('topico')
+        topicos_perguntas = {}
+        
         for pergunta in perguntas:
+            if pergunta.topico not in topicos_perguntas:
+                topicos_perguntas[pergunta.topico] = []
+            topicos_perguntas[pergunta.topico].append(pergunta)
+
+            # Campo para nota
             self.fields[f'pergunta_{pergunta.id}_nota'] = forms.IntegerField(
                 label=pergunta.texto,
                 min_value=0,
@@ -85,39 +79,45 @@ class AvaliacaoForm(forms.ModelForm):
                     'class': 'form-control',
                     'style': 'border: 1px solid #ced4da; border-radius: .25rem; padding: .375rem .75rem;'
                 }),
-                required=True  # Torna o campo obrigatório
+                required=True
             )
-            self.fields[f'pergunta_{pergunta.id}_texto'] = forms.CharField(
-                label=f'Comentário sobre {pergunta.texto}',
+
+            # Campo para competências
+            self.fields[f'pergunta_{pergunta.id}_competencias'] = forms.CharField(
+                label=f'Competência: {pergunta.competencias}',
                 widget=forms.TextInput(attrs={
                     'class': 'form-control',
                     'style': 'border: 1px solid #ced4da; border-radius: .25rem; padding: .375rem .75rem;'
                 }),
-                required=False  # Torna o campo opcional
+                required=False
             )
 
-    def save(self, commit=True):
-        # Cria a avaliação sem salvar ainda
-        avaliacao = super().save(commit=False)
+        # Armazenar os tópicos e suas perguntas para uso no template
+        self.topicos_perguntas = topicos_perguntas
 
-        # Salva a avaliação no banco de dados
-        if commit:
-            avaliacao.save()  # Salva a avaliação
+        def save(self, commit=True):
+            # Cria a avaliação sem salvar ainda
+            avaliacao = super().save(commit=False)
 
-            # Salva as respostas relacionadas
-            for pergunta in Pergunta.objects.all():
-                resposta_nota = self.cleaned_data.get(f'pergunta_{pergunta.id}_nota')
-                resposta_texto = self.cleaned_data.get(f'pergunta_{pergunta.id}_texto')
-                if resposta_nota is not None or resposta_texto:
-                    AvaliacaoPerguntaResposta.objects.create(
-                        avaliacao=avaliacao,
-                        pergunta=pergunta,
-                        nota=resposta_nota,
-                        texto=resposta_texto,
-                        colaborador=self.user  # Define o usuário
-                    )
-                    
-        return avaliacao
+            # Salva a avaliação no banco de dados
+            if commit:
+                avaliacao.save()
+
+                # Salva as respostas relacionadas
+                for pergunta in Pergunta.objects.all():
+                    # Obtém a nota e a competência do formulário
+                    nota = self.cleaned_data.get(f'pergunta_{pergunta.id}_nota')
+                    competencias = self.cleaned_data.get(f'pergunta_{pergunta.id}_competencias')
+
+                    if nota is not None:  # Verifica se a nota foi fornecida
+                        Resposta.objects.create(
+                            avaliacao=avaliacao,
+                            pergunta=pergunta,
+                            nota=nota,
+                            usuario=self.user
+                        )
+                        
+            return avaliacao
 
 # class AvaliacaoForm(forms.ModelForm):
 #     class Meta:

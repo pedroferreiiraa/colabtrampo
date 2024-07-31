@@ -2,14 +2,11 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Avaliar Colaborador</h2>
-    
-    <p><strong>Colaborador Avaliado:</strong> {{ colaborador_avaliado }}</p>
-
+    <h2>Avaliação do Líder para {{ colaborador_avaliado.nome }}</h2>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+        <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
     </form>
 </div>
 {% endblock %}
